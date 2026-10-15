@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 # Builds the self-hosted image (Containerfile) and smoke-tests it, so
-# self-hosting cannot silently rot (§10). Build only: nothing is published.
+# self-hosting cannot silently rot (§10). Build only: images are published
+# per release by release-please.yml.
 name: Container
 
 on:

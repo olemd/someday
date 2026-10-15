@@ -1,9 +1,10 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
-# Releases and production deploys. Every push to main updates a release PR
-# (version bump + CHANGELOG from Conventional Commits: feat → minor,
-# fix → patch). Merging that PR creates the release, and only then is the
-# release deployed to Cloudflare. Pushes to main without a release never
-# reach production.
+# Releases. Every push to main updates a release PR (version bump +
+# CHANGELOG from Conventional Commits: feat → minor, fix → patch). Merging
+# that PR creates the release; only then is it deployed to Cloudflare and
+# published as a container image (ghcr.io/<owner>/<repo>:<version> and
+# :latest, for self-hosters using `podman auto-update`). Pushes to main
+# without a release never reach production or the registry.
 name: Release Please
 
 on:
@@ -20,6 +21,7 @@ jobs:
     outputs:
       release_created: ${{ steps.release.outputs.release_created }}
       tag: ${{ steps.release.outputs.tag_name }}
+      version: ${{ steps.release.outputs.version }}
       sha: ${{ steps.release.outputs.sha }}
     steps:
       - uses: googleapis/release-please-action@v5
@@ -39,3 +41,39 @@ jobs:
     with:
       ref: ${{ needs.release-please.outputs.sha }}
     secrets: inherit
+
+  # The self-hosted image (§10a), built, smoke-tested and pushed per release.
+  image:
+    needs: release-please
+    if: ${{ needs.release-please.outputs.release_created == 'true' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    env:
+      IMAGE: ghcr.io/${{ github.repository }}
+      VERSION: ${{ needs.release-please.outputs.version }}
+      REVISION: ${{ needs.release-please.outputs.sha }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.release-please.outputs.sha }}
+      - name: Build image
+        env:
+          BUILDAH_FORMAT: docker
+        run: |
+          podman build \
+            --build-arg BUILD_DATE="$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --build-arg GIT_REVISION="${REVISION}" \
+            --build-arg APP_VERSION="${VERSION}" \
+            --build-arg SOURCE_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}" \
+            -t "${IMAGE}:${VERSION}" -t "${IMAGE}:latest" .
+      - name: Smoke test
+        run: scripts/container-smoke.sh "${IMAGE}:${VERSION}"
+      - name: Push to GitHub Container Registry
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          printf '%s' "$GH_TOKEN" | podman login ghcr.io -u "${GITHUB_ACTOR}" --password-stdin
+          podman push "${IMAGE}:${VERSION}"
+          podman push "${IMAGE}:latest"

@@ -9,8 +9,9 @@ Wants=network-online.target
 After=network-online.target
 
 [Container]
-# Build the image yourself (no image is published): see docs/self-hosting.md.
-Image=localhost/someday:latest
+# Published for every release. :latest follows releases; pin a version
+# (e.g. :0.2.0) instead if you want to update by hand.
+Image=ghcr.io/olemd/someday:latest
 ContainerName=someday
 # Only reachable from this host: the reverse proxy (Caddy) forwards to it.
 PublishPort=127.0.0.1:8080:8080
@@ -23,6 +24,8 @@ ReadOnly=true
 Tmpfs=/tmp
 NoNewPrivileges=true
 DropCapability=ALL
+# Pull a newer :latest with `podman auto-update` (or the podman-auto-update.timer).
+AutoUpdate=registry
 
 [Service]
 Restart=always

@@ -275,7 +275,7 @@ Tool results are compact JSON + short text summary. All MCP writes recorded in `
 - Optional preview environment (`env.preview`, separate D1) deployed on PR label `preview`.
 - Repo secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`. Document required token permissions in README.
 - README: self-hosting guide (fork → create D1 → set secrets → push), consistent with stoppeklokke.
-- The deploy pipeline targets Cloudflare only. No image publishing (can be added later as GHCR job behind a flag).
+- The deploy pipeline targets Cloudflare only. Each release also publishes the container image to GHCR (`:<version>` and `:latest`) so self-hosters can auto-update (decided 2026-10-15).
 
 ## 10a. Self-hosting with Podman
 

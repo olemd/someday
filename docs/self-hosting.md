@@ -8,9 +8,18 @@ Someday runs on Cloudflare Workers by default ([README](../README.md#deploy-your
 - **HTTPS** via a reverse proxy. Passkeys only work in a secure context, and the `__Host-` session cookie requires `Secure`. The example uses [Caddy](https://caddyserver.com).
 - `PUBLIC_ORIGIN` set to the public `https://` address. It is the passkey domain, the OAuth issuer and the base for links in notifications.
 
-## 1. Build the image
+## 1. The image
 
-No image is published; build it from a checkout (CI builds the same image on every PR, so it does not rot):
+Every release is published as `ghcr.io/olemd/someday:<version>` and `:latest` (built from the same Containerfile and smoke-tested first):
+
+```sh
+podman pull ghcr.io/olemd/someday:latest
+```
+
+The image runs as uid 1000, exposes port 8080, keeps the database at `/data/someday.db` (WAL mode, `busy_timeout=5000`), applies migrations from `migrations/` on startup (tracked in a `d1_migrations` table, the same as wrangler, so a database copied between targets stays consistent), and has a `HEALTHCHECK` on `GET /healthz`. Build metadata is in `/etc/build-info` and the OCI labels.
+
+<details>
+<summary>Building it yourself instead (e.g. a fork with changes)</summary>
 
 ```sh
 git clone https://github.com/olemd/someday && cd someday
@@ -21,14 +30,17 @@ BUILDAH_FORMAT=docker podman build \
   -t localhost/someday:latest .
 ```
 
-The image runs as uid 1000, exposes port 8080, keeps the database at `/data/someday.db` (WAL mode, `busy_timeout=5000`), applies migrations from `migrations/` on startup (tracked in a `d1_migrations` table, the same as wrangler, so a database copied between targets stays consistent), and has a `HEALTHCHECK` on `GET /healthz`. Build metadata is in `/etc/build-info` and the OCI labels.
+Then use `Image=localhost/someday:latest` in the Quadlet unit and drop `AutoUpdate=registry`.
+
+</details>
 
 ## 2. Secrets and configuration
 
 ```sh
 openssl rand -base64 48 | podman secret create someday-pepper -
 mkdir -p ~/.config/someday
-cp deploy/podman/someday.env.example ~/.config/someday/someday.env
+curl -fsSL https://raw.githubusercontent.com/olemd/someday/main/deploy/podman/someday.env.example \
+  -o ~/.config/someday/someday.env
 chmod 600 ~/.config/someday/someday.env
 ```
 
@@ -38,7 +50,8 @@ Edit the file: set `PUBLIC_ORIGIN`, a `BOOTSTRAP_ADMIN_TOKEN` (`openssl rand -ba
 
 ```sh
 mkdir -p ~/.config/containers/systemd
-cp deploy/podman/someday.container ~/.config/containers/systemd/
+curl -fsSL https://raw.githubusercontent.com/olemd/someday/main/deploy/podman/someday.container \
+  -o ~/.config/containers/systemd/someday.container
 systemctl --user daemon-reload
 systemctl --user start someday
 loginctl enable-linger "$USER"   # keep it running after logout
@@ -64,4 +77,4 @@ Open `https://<your domain>/setup?token=<BOOTSTRAP_ADMIN_TOKEN>` and create a pa
 - **Backups**: `podman exec someday bun -e "new (require('bun:sqlite').Database)('/data/someday.db').run(\"VACUUM INTO '/data/backup.db'\")"`, or `sqlite3 someday.db ".backup backup.db"` on the volume, or a volume snapshot. The supported way to move between Cloudflare and a self-hosted instance is the in-app export/import.
 - **Rate limits** are in memory: a single instance is assumed, and a restart resets the counters.
 - **Scheduled work** runs in-process every 15 minutes (aligned to the quarter hour). It is idempotent, so restarts never double-send.
-- **Updates**: pull the new code, rebuild the image, `systemctl --user restart someday`. Migrations run on start.
+- **Updates**: the unit has `AutoUpdate=registry`, so `systemctl --user enable --now podman-auto-update.timer` pulls each new release (daily) and restarts the container; or run `podman auto-update` yourself. Migrations run on start and are additive, so updating is safe; to stay on a version, pin it in `Image=` (e.g. `ghcr.io/olemd/someday:0.2.0`). Release notes: the repository's CHANGELOG.
