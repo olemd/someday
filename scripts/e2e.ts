@@ -211,17 +211,18 @@ try {
   await step('still shows lists after an update, from an older local copy', async () => {
     // What a device that last synced before 0.4.0 has: items without the
     // newer fields, and no data version.
-    await page.evaluate(async () => {
+    // A string: scripts are type-checked without the DOM library.
+    await page.evaluate(`(async () => {
       const dbs = await indexedDB.databases();
-      const name = dbs.find((d) => d.name?.startsWith('someday-'))!.name!;
-      const db = await new Promise<IDBDatabase>((ok, no) => {
+      const name = dbs.find((d) => d.name && d.name.startsWith('someday-')).name;
+      const db = await new Promise((ok, no) => {
         const r = indexedDB.open(name);
         r.onsuccess = () => ok(r.result);
         r.onerror = () => no(r.error);
       });
       const t = db.transaction(['items', 'meta'], 'readwrite');
       const store = t.objectStore('items');
-      const all = await new Promise<Record<string, unknown>[]>((ok) => {
+      const all = await new Promise((ok) => {
         const r = store.getAll();
         r.onsuccess = () => ok(r.result);
       });
@@ -232,7 +233,7 @@ try {
       t.objectStore('meta').delete('version');
       await new Promise((ok) => (t.oncomplete = ok));
       db.close();
-    });
+    })()`);
     await page.reload();
     await page.getByText('Idea from Bob').waitFor();
     // The full sync brought the fields back.
