@@ -2,6 +2,7 @@
 /** Settings: profile, language and time zone, notifications, security, invites. */
 import { useEffect, useState } from 'preact/hooks';
 import { Invites } from '../components/Invites';
+import { YourData } from '../components/YourData';
 import { PushSettings } from '../components/PushSettings';
 import { SecuritySettings } from '../components/Security';
 import { showError, toast } from '../components/Toast';
@@ -339,6 +340,7 @@ export function SettingsScreen() {
       <Suggestions />
       <SecuritySettings />
       <Invites />
+      <YourData />
       <div class="actions">
         <button
           type="button"

@@ -200,6 +200,19 @@ try {
     await bobCtx.close();
   });
 
+  await step('downloads the data export', async () => {
+    await page.getByRole('link', { name: 'Settings' }).first().click();
+    const [download] = await Promise.all([
+      page.waitForEvent('download'),
+      page.getByRole('link', { name: 'Download zip' }).click(),
+    ]);
+    if (!download.suggestedFilename().startsWith('someday-export-')) {
+      throw new Error(`unexpected file name ${download.suggestedFilename()}`);
+    }
+    const bytes = await Bun.file((await download.path())!).bytes();
+    if (bytes[0] !== 0x50 || bytes[1] !== 0x4b) throw new Error('not a zip');
+  });
+
   await step('logs in again with the passkey', async () => {
     await page.getByRole('link', { name: 'Settings' }).first().click();
     await page.getByRole('button', { name: 'Log out' }).click();

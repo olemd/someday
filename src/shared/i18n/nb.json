@@ -513,5 +513,31 @@
     "pauseMonth": "1 måned",
     "pauseForever": "Til jeg starter igjen",
     "pauseUntil": "Til dato"
+  },
+  "data": {
+    "title": "Dine data",
+    "download": "Last ned dataene mine",
+    "downloadIntro": "En zip med alt du kan se (som JSON og lesbar Markdown) og dine egne loggføringer. Ingenting av andre medlemmers private notater.",
+    "downloadButton": "Last ned zip",
+    "import": "Importer",
+    "importIntro": "Fra en Someday-eksport (zip-filen eller someday-export.json), også fra en annen Someday-installasjon. Du ser hva som blir lagt til før noe endres.",
+    "file": "Fil",
+    "into": "Legg til i",
+    "intoNew": "Nye lister (én per liste i filen)",
+    "intoExisting": "En eksisterende liste",
+    "targetList": "Liste å legge til i",
+    "check": "Sjekk filen",
+    "preview": "Dette legger til {lists} liste(r), {items} idé(er) og {log} loggføringer.",
+    "importNow": "Importer nå",
+    "imported_one": "Importerte {count} idé",
+    "imported_other": "Importerte {count} ideer",
+    "deleteAccount": "Slett kontoen min",
+    "deleteAccountStart": "Slett kontoen min …",
+    "deleteIntro": "Du blir logget ut overalt med en gang. Listene og loggen din slettes for godt etter {days} dager.",
+    "sharedListChoice": "«{name}» er delt. Hva skal skje med den?",
+    "choose": "Velg …",
+    "deleteForEveryone": "Slett den for alle",
+    "giveTo": "Gi den til {name}",
+    "deleteConfirm": "Slette kontoen? Dette kan ikke angres etter karenstiden."
   }
 }

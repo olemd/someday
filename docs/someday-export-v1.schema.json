@@ -1,0 +1,327 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "someday-export/v1"
+    },
+    "exported_at": {
+      "type": "string"
+    },
+    "source": {
+      "type": "object",
+      "properties": {
+        "origin": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        }
+      },
+      "required": ["origin", "version"]
+    },
+    "user": {
+      "type": "object",
+      "properties": {
+        "display_name": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string"
+        },
+        "settings": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {}
+        }
+      },
+      "required": ["display_name", "created_at", "settings"]
+    },
+    "lists": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "role": {
+            "type": "string",
+            "enum": ["owner", "editor", "viewer"]
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "shared_from": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "owner": {
+                    "type": "string"
+                  }
+                },
+                "required": ["owner"]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "title": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                },
+                "notes": {
+                  "type": "string",
+                  "maxLength": 20000
+                },
+                "status": {
+                  "type": "string",
+                  "enum": ["idea", "planned", "done", "archived"]
+                },
+                "repeatable": {
+                  "type": "boolean"
+                },
+                "duration": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "enum": ["short", "half_day", "day", "weekend", "trip"]
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "setting": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "enum": ["indoor", "outdoor", "either"]
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "cost": {
+                  "anyOf": [
+                    {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 3
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "energy": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "enum": ["low", "medium", "high"]
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "social": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "enum": ["solo", "together", "either"]
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "valid_from": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "date",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "valid_to": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "date",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "months": {
+                  "anyOf": [
+                    {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 4095
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "links": {
+                  "maxItems": 50,
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "url": {
+                        "type": "string",
+                        "maxLength": 2000,
+                        "format": "uri"
+                      },
+                      "label": {
+                        "type": "string",
+                        "maxLength": 200
+                      }
+                    },
+                    "required": ["url"]
+                  }
+                },
+                "location": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "label": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 200
+                        },
+                        "lat": {
+                          "type": "number",
+                          "minimum": -90,
+                          "maximum": 90
+                        },
+                        "lon": {
+                          "type": "number",
+                          "minimum": -180,
+                          "maximum": 180
+                        }
+                      },
+                      "required": ["label"]
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "tags": {
+                  "maxItems": 50,
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 50
+                  }
+                },
+                "id": {
+                  "type": "string"
+                },
+                "created_at": {
+                  "type": "string"
+                },
+                "updated_at": {
+                  "type": "string"
+                },
+                "log": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "done_on": {
+                        "type": "string",
+                        "format": "date",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                      },
+                      "note": {
+                        "type": "string",
+                        "maxLength": 5000
+                      },
+                      "rating": {
+                        "anyOf": [
+                          {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 5
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "visibility": {
+                        "type": "string",
+                        "enum": ["private", "anonymous", "shared"]
+                      },
+                      "created_at": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["done_on", "note", "rating", "visibility", "created_at"]
+                  }
+                }
+              },
+              "required": [
+                "title",
+                "notes",
+                "status",
+                "repeatable",
+                "duration",
+                "setting",
+                "cost",
+                "energy",
+                "social",
+                "valid_from",
+                "valid_to",
+                "months",
+                "links",
+                "location",
+                "tags",
+                "id",
+                "created_at",
+                "updated_at",
+                "log"
+              ]
+            }
+          }
+        },
+        "required": ["id", "name", "role", "created_at", "shared_from", "items"]
+      }
+    }
+  },
+  "required": ["schema", "exported_at", "source", "user", "lists"],
+  "$id": "https://github.com/olemd/someday/blob/main/docs/someday-export-v1.schema.json",
+  "title": "someday-export/v1",
+  "description": "Someday data export, version 1 (SPEC §7)."
+}

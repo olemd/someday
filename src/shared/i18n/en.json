@@ -513,5 +513,31 @@
     "pauseMonth": "1 month",
     "pauseForever": "Until I resume",
     "pauseUntil": "Until date"
+  },
+  "data": {
+    "title": "Your data",
+    "download": "Download my data",
+    "downloadIntro": "A zip with everything you can see (as JSON and readable Markdown) and your own log entries. Nothing of other members' private notes.",
+    "downloadButton": "Download zip",
+    "import": "Import",
+    "importIntro": "From a Someday export (the zip, or someday-export.json), also from another Someday instance. You see what will be added before anything changes.",
+    "file": "File",
+    "into": "Add to",
+    "intoNew": "New lists (one per list in the file)",
+    "intoExisting": "An existing list",
+    "targetList": "List to add to",
+    "check": "Check the file",
+    "preview": "This adds {lists} list(s), {items} idea(s) and {log} log entries.",
+    "importNow": "Import now",
+    "imported_one": "Imported {count} idea",
+    "imported_other": "Imported {count} ideas",
+    "deleteAccount": "Delete my account",
+    "deleteAccountStart": "Delete my account…",
+    "deleteIntro": "You are logged out everywhere at once. Your lists and log are deleted for good after {days} days.",
+    "sharedListChoice": "“{name}” is shared. What should happen to it?",
+    "choose": "Choose…",
+    "deleteForEveryone": "Delete it for everyone",
+    "giveTo": "Give it to {name}",
+    "deleteConfirm": "Delete your account? This cannot be undone after the grace period."
   }
 }

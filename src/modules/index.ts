@@ -13,6 +13,7 @@ import { pushModule } from './push';
 import { settingsModule } from './settings';
 import { snoozeModule, suggestModule } from './suggest';
 import { syncModule } from './sync';
+import { accountModule, exportModule, importModule } from './takeaway';
 import type { Module } from './types';
 
 export const modules: Module[] = [
@@ -34,4 +35,7 @@ export const modules: Module[] = [
   snoozeModule,
   syncModule,
   notifyModule,
+  exportModule,
+  importModule,
+  accountModule,
 ];

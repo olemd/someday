@@ -36,7 +36,16 @@ addEventListener('popstate', () => {
 /** Intercept same-origin <a> clicks so links work without full reloads. */
 export function onLinkClick(e: MouseEvent) {
   const a = (e.target as HTMLElement).closest('a');
-  if (!a || a.target || a.origin !== location.origin || e.ctrlKey || e.metaKey || e.shiftKey)
+  if (
+    !a ||
+    a.target ||
+    a.hasAttribute('download') ||
+    a.pathname.startsWith('/api/') ||
+    a.origin !== location.origin ||
+    e.ctrlKey ||
+    e.metaKey ||
+    e.shiftKey
+  )
     return;
   e.preventDefault();
   navigate(a.pathname + a.search);
