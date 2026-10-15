@@ -568,5 +568,21 @@
     "none": "No apps are connected.",
     "revoke": "Disconnect",
     "revokeConfirm": "Disconnect {name}? It loses access at once."
+  },
+  "welcome": {
+    "lead": "A slow-moving list of things you want to do or find out about some day — and a button that picks one when you have time.",
+    "collectTitle": "Collect ideas.",
+    "collect": "Places to see, things to learn, adventures for a free weekend. Add when it fits, by season or before a date.",
+    "suggestTitle": "Give me something to do.",
+    "suggest": "One tap picks something that fits right now, and says why.",
+    "shareTitle": "Share lists.",
+    "share": "Plan things with others, and decide yourself who sees what you have done.",
+    "privateTitle": "Yours.",
+    "private": "No passwords, no email, works offline, and you can take all your data with you.",
+    "newTitle": "New here?",
+    "newInvite": "You need an invite to get an account here. Ask someone who uses this Someday to send you an invite link.",
+    "newOpen": "Anyone can create an account here. It takes a name and a passkey.",
+    "newClosed": "This Someday is not taking new accounts at the moment.",
+    "passkeys": "Someday uses passkeys: you log in with your fingerprint, face or device PIN, and there is no password to forget or leak."
   }
 }

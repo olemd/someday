@@ -806,3 +806,26 @@ fieldset.panel > legend {
 .flush {
   margin: 0;
 }
+
+/* ── Welcome (logged out) ───────────────────────────────────────────── */
+
+.welcome h1 {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 2rem;
+}
+.welcome .brand-sun {
+  width: 1.2rem;
+  height: 1.2rem;
+}
+.lead {
+  font-size: 1.15rem;
+}
+.welcome-points {
+  margin: 0;
+  padding-inline-start: 1.2rem;
+}
+.welcome-points li + li {
+  margin-top: 0.5rem;
+}

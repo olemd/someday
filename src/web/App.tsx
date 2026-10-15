@@ -13,7 +13,7 @@ import { setLocale, t } from './lib/i18n';
 import { navigate, onLinkClick, route } from './lib/router';
 import { auth, loadAuth, loadNotices, loadSettings, online, settings } from './lib/store';
 import { AdminScreen } from './screens/Admin';
-import { Login, MustRegister, NewDevice, Signup } from './screens/Auth';
+import { MustRegister, NewDevice, Signup, Welcome } from './screens/Auth';
 import { ConsentScreen } from './screens/Consent';
 import { HomeScreen } from './screens/Home';
 import { JoinScreen } from './screens/Join';
@@ -169,7 +169,7 @@ export function App() {
   if (pub && !authed) return <Shell bare>{pub}</Shell>;
   if (!a.authenticated) {
     if (a.setup_available && path === '/') navigate('/setup', true);
-    return <Shell bare>{<Login />}</Shell>;
+    return <Shell bare>{<Welcome />}</Shell>;
   }
   if (a.must_register) return <Shell bare>{<MustRegister />}</Shell>;
   if (!loaded) return <Shell bare>{<p>{t('app.loading')}</p>}</Shell>;

@@ -378,6 +378,13 @@ try {
   await shot(p, '12-phone-norwegian');
   await api(p, '/settings', 'PATCH', { locale: 'en' });
   await phone.close();
+  // 10. What a logged-out visitor sees.
+  const guest = await browser.newContext({ viewport: DESKTOP, locale: 'en-GB' });
+  const g = await guest.newPage();
+  await g.goto(`${O}/`);
+  await g.getByRole('button', { name: 'Log in with passkey' }).waitFor();
+  await shot(g, '13-welcome', true);
+  await guest.close();
   console.log(`Saved in ${out}`);
 } finally {
   await browser.close();

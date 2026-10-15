@@ -2,6 +2,12 @@
 
 Someday is not a todo list. It is a slow-moving collection of things you would like to do or find out about *some day*, and a button that picks one for you when you have time.
 
+## Getting in
+
+![The welcome page a logged-out visitor sees](screenshots/13-welcome.png)
+
+Someday has no passwords: you log in with a passkey (fingerprint, face or device PIN). Most instances are invite-only: someone who already uses it sends you an invite link (to the instance, or to a shared list), and you create your account from that link. The first account is created by whoever runs the server, with the setup link.
+
 ## Give me something
 
 ![The suggestion screen: northern lights, with the reasons it was picked](screenshots/01-give-me-something.png)

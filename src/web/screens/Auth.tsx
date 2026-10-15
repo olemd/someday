@@ -221,13 +221,9 @@ export function Login() {
       setBusy(false);
     }
   };
-  const a = auth.value;
   return (
     <section class="panel stack" aria-labelledby="login-title">
-      <h1 id="login-title" tabIndex={-1}>
-        {t('auth.loginTitle')}
-      </h1>
-      <p>{t('app.tagline')}</p>
+      <h2 id="login-title">{t('auth.loginTitle')}</h2>
       <Unsupported />
       <ErrorLine text={error} />
       <button
@@ -241,11 +237,6 @@ export function Login() {
       <p>
         <a href="/link">{t('auth.addThisDevice')}</a>
       </p>
-      {a?.registration_mode === 'open' && (
-        <p>
-          <a href="/signup">{t('auth.createAccount')}</a>
-        </p>
-      )}
       <details>
         <summary>{t('auth.useRecovery')}</summary>
         <form
@@ -273,6 +264,55 @@ export function Login() {
         </form>
       </details>
     </section>
+  );
+}
+
+/**
+ * What a first-time visitor sees: what Someday is, how to get in (which
+ * depends on the registration mode), and the login.
+ */
+export function Welcome() {
+  const mode = auth.value?.registration_mode;
+  return (
+    <div class="stack">
+      <section class="welcome stack" aria-labelledby="welcome-title">
+        <h1 id="welcome-title" tabIndex={-1}>
+          <span class="brand-sun" aria-hidden="true" /> {t('app.name')}
+        </h1>
+        <p class="lead">{t('welcome.lead')}</p>
+        <ul class="welcome-points">
+          <li>
+            <strong>{t('welcome.collectTitle')}</strong> {t('welcome.collect')}
+          </li>
+          <li>
+            <strong>{t('welcome.suggestTitle')}</strong> {t('welcome.suggest')}
+          </li>
+          <li>
+            <strong>{t('welcome.shareTitle')}</strong> {t('welcome.share')}
+          </li>
+          <li>
+            <strong>{t('welcome.privateTitle')}</strong> {t('welcome.private')}
+          </li>
+        </ul>
+      </section>
+      <Login />
+      <section class="panel stack" aria-labelledby="new-title">
+        <h2 id="new-title">{t('welcome.newTitle')}</h2>
+        {mode === 'open' ? (
+          <>
+            <p>{t('welcome.newOpen')}</p>
+            <p>
+              <a class="btn plain" href="/signup">
+                {t('auth.createAccount')}
+              </a>
+            </p>
+          </>
+        ) : (
+          <p>{mode === 'closed' ? t('welcome.newClosed') : t('welcome.newInvite')}</p>
+        )}
+        <p class="hint">{t('welcome.passkeys')}</p>
+      </section>
+    </div>
   );
 }
 

@@ -568,5 +568,21 @@
     "none": "Ingen apper er koblet til.",
     "revoke": "Koble fra",
     "revokeConfirm": "Koble fra {name}? Appen mister tilgangen med en gang."
+  },
+  "welcome": {
+    "lead": "En rolig liste over ting du vil gjøre eller finne ut av en dag – og en knapp som velger noe når du har tid.",
+    "collectTitle": "Samle ideer.",
+    "collect": "Steder å se, ting å lære, eventyr for en ledig helg. Med sesong eller frist når det passer.",
+    "suggestTitle": "Gi meg noe å gjøre.",
+    "suggest": "Ett trykk finner noe som passer akkurat nå, og forteller hvorfor.",
+    "shareTitle": "Del lister.",
+    "share": "Planlegg sammen med andre, og bestem selv hvem som ser hva du har gjort.",
+    "privateTitle": "Ditt.",
+    "private": "Ingen passord, ingen e-post, virker uten nett, og du kan ta med deg alle dataene dine.",
+    "newTitle": "Ny her?",
+    "newInvite": "Du trenger en invitasjon for å få konto her. Be noen som bruker denne Someday-en om å sende deg en invitasjonslenke.",
+    "newOpen": "Hvem som helst kan opprette konto her. Det tar et navn og en passnøkkel.",
+    "newClosed": "Denne Someday-installasjonen tar ikke imot nye kontoer for øyeblikket.",
+    "passkeys": "Someday bruker passnøkler: du logger inn med fingeravtrykk, ansikt eller PIN-koden på enheten, og det finnes ikke noe passord å glemme eller lekke."
   }
 }
