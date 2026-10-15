@@ -157,9 +157,10 @@ function tokenPermissions(customDomain: boolean) {
  * A dashboard link that opens "Create API token" with the permissions filled
  * in, in exactly the encoding of Cloudflare's documented examples
  * (developers.cloudflare.com/fundamentals/api/how-to/account-owned-token-template):
- * `accountId=%2A`, and a name with only letters, digits and spaces.
+ * the chosen account (`accountId=%2A` would default the token to every
+ * account), and a name with only letters, digits and spaces.
  */
-function tokenTemplateUrl(customDomain: boolean, name: string): string {
+function tokenTemplateUrl(customDomain: boolean, name: string, accountId: string): string {
   const perms = tokenPermissions(customDomain).map(({ key, type }) => ({ key, type }));
   const safeName = name
     .replace(/[^A-Za-z0-9 ]+/g, ' ')
@@ -168,7 +169,7 @@ function tokenTemplateUrl(customDomain: boolean, name: string): string {
   return (
     'https://dash.cloudflare.com/profile/api-tokens' +
     `?permissionGroupKeys=${encodeURIComponent(JSON.stringify(perms))}` +
-    `&accountId=%2A&zoneId=all&name=${encodeURIComponent(safeName)}`
+    `&accountId=${encodeURIComponent(accountId)}&zoneId=all&name=${encodeURIComponent(safeName)}`
   );
 }
 
@@ -345,7 +346,7 @@ const variables: Record<string, string> = {
     : {}),
 };
 const repo = await githubRepo();
-const tokenUrl = tokenTemplateUrl(!!customDomain, `${workerName} deploy GitHub Actions`);
+const tokenUrl = tokenTemplateUrl(!!customDomain, `${workerName} deploy GitHub Actions`, accountId);
 const permissionList = tokenPermissions(!!customDomain)
   .map((p) => `    - ${p.label}`)
   .join('\n');
