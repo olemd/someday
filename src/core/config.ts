@@ -111,6 +111,9 @@ export function parseConfig(raw: Record<string, unknown>): ParsedConfig {
     const partial = Object.fromEntries(Object.entries(cleaned).filter(([k]) => !bad.has(k)));
     parsed = ConfigSchema.parse({ ...FALLBACK, ...partial });
   }
+  if (parsed.SUGGESTER === 'llm') {
+    errors.push('SUGGESTER=llm is not available in v1; the weighted suggester is used');
+  }
   const vapid = [parsed.VAPID_PUBLIC_KEY, parsed.VAPID_PRIVATE_KEY].filter(Boolean).length;
   if (vapid === 1) errors.push('VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY must be set together');
   const url = new URL(parsed.PUBLIC_ORIGIN);

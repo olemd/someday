@@ -1,5 +1,9 @@
 {
-  "_meta": { "name": "English", "englishName": "English", "dir": "ltr" },
+  "_meta": {
+    "name": "English",
+    "englishName": "English",
+    "dir": "ltr"
+  },
   "app": {
     "name": "Someday",
     "tagline": "Things to do or find out about some day.",
@@ -195,5 +199,56 @@
     "disable": "Disable",
     "enable": "Enable",
     "disableConfirm": "Disable {name}? They are logged out everywhere and cannot log in until enabled again."
+  },
+  "reason": {
+    "age_new": "Just added",
+    "age_days_one": "On your list for {count} day",
+    "age_days_other": "On your list for {count} days",
+    "age_weeks_one": "On your list for {count} week",
+    "age_weeks_other": "On your list for {count} weeks",
+    "age_months_one": "On your list for {count} month",
+    "age_months_other": "On your list for {count} months",
+    "age_years_one": "On your list for {count} year",
+    "age_years_other": "On your list for {count} years",
+    "last_done_days_one": "Last done {count} day ago",
+    "last_done_days_other": "Last done {count} days ago",
+    "last_done_weeks_one": "Last done {count} week ago",
+    "last_done_weeks_other": "Last done {count} weeks ago",
+    "last_done_months_one": "Last done {count} month ago",
+    "last_done_months_other": "Last done {count} months ago",
+    "date_ends_today": "Last chance: the window closes today",
+    "date_ends_days_one": "Window closes in {count} day",
+    "date_ends_days_other": "Window closes in {count} days",
+    "date_ends_weeks_one": "Window closes in {count} week",
+    "date_ends_weeks_other": "Window closes in {count} weeks",
+    "date_ends_months_one": "Window closes in {count} month",
+    "date_ends_months_other": "Window closes in {count} months",
+    "season_ends_today": "Last day of the season",
+    "season_ends_days_one": "Season ends in {count} day",
+    "season_ends_days_other": "Season ends in {count} days",
+    "season_ends_weeks_one": "Season ends in {count} week",
+    "season_ends_weeks_other": "Season ends in {count} weeks",
+    "season_ends_months_one": "Season ends in {count} month",
+    "season_ends_months_other": "Season ends in {count} months",
+    "planned": "You planned this",
+    "matches": "Matches: {list}",
+    "match": {
+      "duration_short": "under an hour",
+      "duration_half_day": "half a day",
+      "duration_day": "a day",
+      "duration_weekend": "a weekend",
+      "duration_trip": "a trip",
+      "setting_indoor": "indoor",
+      "setting_outdoor": "outdoor",
+      "cost_0": "free",
+      "cost_1": "cheap",
+      "cost_2": "moderate cost",
+      "cost_3": "expensive",
+      "energy_low": "low energy",
+      "energy_medium": "medium energy",
+      "energy_high": "high energy",
+      "social_solo": "solo",
+      "social_together": "together"
+    }
   }
 }

@@ -1,5 +1,9 @@
 {
-  "_meta": { "name": "Norsk bokmål", "englishName": "Norwegian Bokmål", "dir": "ltr" },
+  "_meta": {
+    "name": "Norsk bokmål",
+    "englishName": "Norwegian Bokmål",
+    "dir": "ltr"
+  },
   "app": {
     "name": "Someday",
     "tagline": "Ting du vil gjøre eller finne ut av en dag.",
@@ -195,5 +199,56 @@
     "disable": "Deaktiver",
     "enable": "Aktiver",
     "disableConfirm": "Deaktivere {name}? Vedkommende blir logget ut overalt og kan ikke logge inn før kontoen aktiveres igjen."
+  },
+  "reason": {
+    "age_new": "Nettopp lagt til",
+    "age_days_one": "Har stått på lista i {count} dag",
+    "age_days_other": "Har stått på lista i {count} dager",
+    "age_weeks_one": "Har stått på lista i {count} uke",
+    "age_weeks_other": "Har stått på lista i {count} uker",
+    "age_months_one": "Har stått på lista i {count} måned",
+    "age_months_other": "Har stått på lista i {count} måneder",
+    "age_years_one": "Har stått på lista i {count} år",
+    "age_years_other": "Har stått på lista i {count} år",
+    "last_done_days_one": "Sist gjort for {count} dag siden",
+    "last_done_days_other": "Sist gjort for {count} dager siden",
+    "last_done_weeks_one": "Sist gjort for {count} uke siden",
+    "last_done_weeks_other": "Sist gjort for {count} uker siden",
+    "last_done_months_one": "Sist gjort for {count} måned siden",
+    "last_done_months_other": "Sist gjort for {count} måneder siden",
+    "date_ends_today": "Siste sjanse: perioden slutter i dag",
+    "date_ends_days_one": "Perioden slutter om {count} dag",
+    "date_ends_days_other": "Perioden slutter om {count} dager",
+    "date_ends_weeks_one": "Perioden slutter om {count} uke",
+    "date_ends_weeks_other": "Perioden slutter om {count} uker",
+    "date_ends_months_one": "Perioden slutter om {count} måned",
+    "date_ends_months_other": "Perioden slutter om {count} måneder",
+    "season_ends_today": "Siste dag i sesongen",
+    "season_ends_days_one": "Sesongen slutter om {count} dag",
+    "season_ends_days_other": "Sesongen slutter om {count} dager",
+    "season_ends_weeks_one": "Sesongen slutter om {count} uke",
+    "season_ends_weeks_other": "Sesongen slutter om {count} uker",
+    "season_ends_months_one": "Sesongen slutter om {count} måned",
+    "season_ends_months_other": "Sesongen slutter om {count} måneder",
+    "planned": "Du har planlagt dette",
+    "matches": "Passer: {list}",
+    "match": {
+      "duration_short": "under en time",
+      "duration_half_day": "en halv dag",
+      "duration_day": "en dag",
+      "duration_weekend": "en helg",
+      "duration_trip": "en tur",
+      "setting_indoor": "innendørs",
+      "setting_outdoor": "utendørs",
+      "cost_0": "gratis",
+      "cost_1": "billig",
+      "cost_2": "middels dyrt",
+      "cost_3": "dyrt",
+      "energy_low": "lite energi",
+      "energy_medium": "middels energi",
+      "energy_high": "mye energi",
+      "social_solo": "alene",
+      "social_together": "sammen"
+    }
   }
 }
