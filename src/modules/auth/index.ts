@@ -20,6 +20,7 @@ import { newUserStmts } from '../data/users';
 import { body, json } from '../http';
 import { adminExists, registrationMode } from '../instance';
 import { notifyPasskeyAdded } from '../notices/service';
+import { findJoinInvite, joinStmts } from '../lists/members';
 import { authLimit, limitOrThrow } from '../ratelimit';
 import type { Ctx, Module, Router } from '../types';
 import { requireFreshAuth, sessionOf } from './middleware';
@@ -71,7 +72,8 @@ const StatusSchema = z.object({
 });
 
 const SignupOptions = z.object({
-  kind: z.enum(['setup', 'invite', 'open']),
+  /** `join`: a list invite link also lets a new person sign up (§3.1). */
+  kind: z.enum(['setup', 'invite', 'open', 'join']),
   token: z.string().max(200).optional(),
   display_name: z.string().trim().min(1).max(80),
 });
@@ -87,8 +89,9 @@ interface SignupContext {
   user_id: string;
   handle: string;
   display_name: string;
-  kind: 'setup' | 'invite' | 'open';
+  kind: 'setup' | 'invite' | 'open' | 'join';
   invite_id: string | null;
+  join: { id: string; list_id: string; role: 'editor' | 'viewer' } | null;
 }
 
 async function findInvite(ctx: Ctx, token: string | undefined) {
@@ -121,6 +124,21 @@ async function checkSignupAllowed(
   if (kind === 'open') {
     if (mode !== 'open') throw new HttpError(403, 'invite_required', 'An invite is required');
     return null;
+  }
+  if (kind === 'join') {
+    const join = token ? await findJoinInvite(ctx, token) : null;
+    if (!join) throw new HttpError(403, 'bad_invite', 'This invite is invalid or used');
+    // With admin-only invites, only an admin's list invite can bring in a new person.
+    if (ctx.config.INVITES_ADMIN_ONLY && mode !== 'open') {
+      const creator = await ctx.db.first<{ role: string }>(
+        'SELECT u.role FROM list_invites i JOIN users u ON u.id = i.created_by WHERE i.id = ?',
+        join.id,
+      );
+      if (creator?.role !== 'admin') {
+        throw new HttpError(403, 'invite_required', 'An invite is required');
+      }
+    }
+    return join.id;
   }
   const invite = await findInvite(ctx, token);
   if (!invite) throw new HttpError(403, 'bad_invite', 'This invite is invalid or used');
@@ -177,12 +195,14 @@ function routes(app: Router) {
       await authLimit(c);
       const { kind, token, display_name } = c.req.valid('json');
       const inviteId = await checkSignupAllowed(ctx, kind, token);
+      const join = kind === 'join' ? await findJoinInvite(ctx, token!) : null;
       const data: SignupContext = {
         user_id: ulid(ctx.clock.now()),
         handle: randomToken(16),
         display_name,
         kind,
-        invite_id: inviteId,
+        invite_id: kind === 'join' ? null : inviteId,
+        join: join ? { id: join.id, list_id: join.list_id, role: join.role } : null,
       };
       const options = await registrationOptions(
         ctx,
@@ -230,6 +250,12 @@ function routes(app: Router) {
       let gate: { sql: string; params: (string | number | null)[] } | undefined;
       if (s.kind === 'setup') {
         gate = { sql: "NOT EXISTS (SELECT 1 FROM users WHERE role = 'admin')", params: [] };
+      } else if (s.kind === 'join' && s.join) {
+        gate = {
+          sql: `EXISTS (SELECT 1 FROM list_invites WHERE id = ? AND revoked_at IS NULL
+                  AND uses < max_uses AND expires_at > ?)`,
+          params: [s.join.id, now],
+        };
       } else if (s.kind === 'invite') {
         stmts.push({
           sql: 'UPDATE invites SET used_at = ?, used_by = ? WHERE id = ? AND used_at IS NULL AND expires_at > ?',
@@ -256,6 +282,7 @@ function routes(app: Router) {
           gate,
         ),
       );
+      if (s.kind === 'join' && s.join) stmts.push(...joinStmts(ctx, s.join, s.user_id));
       const userExists = { sql: 'EXISTS (SELECT 1 FROM users WHERE id = ?)', params: [s.user_id] };
       stmts.push(passkeyInsert(ctx, reg, s.user_id, label, userExists));
       const recovery = await newRecoveryCodes(ctx, s.user_id, userExists);

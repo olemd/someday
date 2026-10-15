@@ -13,6 +13,7 @@ import type { LogEntry, Status, Visibility } from '../../shared/schemas/items';
 import { type Actor, changeStmt } from '../data/changes';
 import type { Access } from '../lists/access';
 import { anonThreshold } from '../lists/service';
+import { enqueueShared } from '../notify/shared';
 import type { Ctx } from '../types';
 import { getItem, ID_RE } from './service';
 
@@ -141,6 +142,17 @@ export async function logDone(
       visibility === 'shared' || closes,
     ),
   );
+  // Only shared entries ever notify others; private and anonymous never do.
+  if (visibility === 'shared') {
+    stmts.push(
+      enqueueShared(ctx, {
+        listId: info.list_id,
+        kind: 'log_shared',
+        itemId,
+        actorId: access.userId,
+      }),
+    );
+  }
   await ctx.db.batch(stmts);
   return getLogEntry(ctx, access.userId, id);
 }
@@ -242,11 +254,22 @@ export async function updateLog(
   if (!sets.length) return toEntry(row, access.userId);
   // Others must hear about it if the entry is, or was, shared.
   const publicChange = row.visibility === 'shared' || visibility === 'shared';
+  const becomesShared = visibility === 'shared' && row.visibility !== 'shared';
   await ctx.db.batch([
     {
       sql: `UPDATE item_log SET ${sets.join(', ')}, updated_at = ? WHERE id = ?`,
       params: [...params, iso(ctx.clock.now()), id],
     },
+    ...(becomesShared
+      ? [
+          enqueueShared(ctx, {
+            listId: info.list_id,
+            kind: 'log_shared',
+            itemId: row.item_id,
+            actorId: access.userId,
+          }),
+        ]
+      : []),
     ...logChanges(ctx, actor, access.userId, id, info.list_id, row.item_id, 'upsert', publicChange),
   ]);
   return getLogEntry(ctx, access.userId, id);

@@ -1,13 +1,50 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 /** Lists overview and one list's ideas with search and filters (§3, M2). */
-import { useMemo, useState } from 'preact/hooks';
+import { useEffect, useMemo, useState } from 'preact/hooks';
 import type { Item, List } from '../../shared/schemas/items';
-import { showError } from '../components/Toast';
-import { createList, itemList, lists, newId, ready, saveItem } from '../lib/data';
+import { showError, toast } from '../components/Toast';
+import { get, post } from '../lib/api';
+import { createList, itemList, lists, newId, ready, saveItem, sync } from '../lib/data';
 import { calendarDate } from '../lib/fmt';
 import { t } from '../lib/i18n';
 import { contextSummary, statusLabel } from '../lib/labels';
 import { navigate, query, route, setQuery } from '../lib/router';
+
+/** Lists deleted in the last 30 days can be restored by their owner (§3.1). Online only. */
+function DeletedLists() {
+  const [deleted, setDeleted] = useState<{ id: string; name: string; deleted_at: string }[]>([]);
+  const load = () => get<typeof deleted>('/lists/deleted').then(setDeleted, () => setDeleted([]));
+  useEffect(() => void load(), []);
+  if (!deleted.length) return null;
+  return (
+    <section class="panel stack" aria-labelledby="deleted-title">
+      <h2 id="deleted-title">{t('lists.deletedTitle')}</h2>
+      <ul class="plain stack tight">
+        {deleted.map((l) => (
+          <li key={l.id} class="row">
+            <span>{l.name}</span>
+            <button
+              type="button"
+              class="btn plain small"
+              onClick={async () => {
+                try {
+                  await post(`/lists/${l.id}/restore`);
+                  await sync();
+                  toast(t('lists.restored'));
+                  void load();
+                } catch (err) {
+                  showError(err);
+                }
+              }}
+            >
+              {t('lists.restore')}
+            </button>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
 
 export function ListsScreen() {
   const [name, setName] = useState('');
@@ -73,6 +110,7 @@ export function ListsScreen() {
           </div>
         </div>
       </form>
+      <DeletedLists />
     </div>
   );
 }

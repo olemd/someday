@@ -30,7 +30,7 @@ type Json = Record<string, unknown>;
 
 /** Create an account: setup (bootstrap token), invite or open registration. */
 export async function signup(
-  kind: 'setup' | 'invite' | 'open',
+  kind: 'setup' | 'invite' | 'open' | 'join',
   displayName: string,
   label: string,
   token?: string,

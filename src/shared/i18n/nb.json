@@ -153,7 +153,9 @@
     "notifyTypes": "Send meg",
     "notifyWindow": "Når sesongen eller perioden for en idé starter, eller slutter om en uke",
     "notifyShared": "Når andre legger til ideer eller deler hva de har gjort på delte lister",
-    "notifyAgent": "Varsler fra tilkoblede apper (assistenter)"
+    "notifyAgent": "Varsler fra tilkoblede apper (assistenter)",
+    "suggestions": "Forslag",
+    "snoozeDays": "«Ikke nå» skjuler en idé i så mange dager"
   },
   "push": {
     "title": "Push-varsler på denne enheten",
@@ -171,7 +173,20 @@
     "testTitle": "Testvarsel",
     "testBody": "Varsler fra Someday virker på denne enheten.",
     "passkeyAddedTitle": "Ny passnøkkel lagt til",
-    "passkeyAddedBody": "Ny passnøkkel lagt til: {label}, {time}. Ikke deg? Åpne Someday for å fjerne den."
+    "passkeyAddedBody": "Ny passnøkkel lagt til: {label}, {time}. Ikke deg? Åpne Someday for å fjerne den.",
+    "sharedSeveral_one": "{name} og {count} annen",
+    "sharedSeveral_other": "{name} og {count} andre",
+    "sharedAddedOne": "{who} la til «{title}»",
+    "sharedDidOne": "{who} gjorde «{title}»",
+    "sharedMany_one": "{who}: {count} oppdatering",
+    "sharedMany_other": "{who}: {count} oppdateringer",
+    "window_opens": "Perioden starter i dag.",
+    "window_seasonStarts": "Sesongen starter i dag.",
+    "window_closes": "Perioden slutter om en uke.",
+    "window_seasonEnds": "Sesongen slutter om en uke.",
+    "windowManyTitle_one": "{count} idé: periode starter eller slutter",
+    "windowManyTitle_other": "{count} ideer: perioder starter eller slutter",
+    "nudgeTitle": "Hva med denne?"
   },
   "notice": {
     "passkeyAdded": "Ny passnøkkel lagt til: {label}, {time}.",
@@ -396,7 +411,10 @@
     "showing_one": "{count} idé",
     "showing_other": "{count} ideer",
     "noMatch": "Ingenting passer.",
-    "empty": "Ingen ideer på denne lista ennå."
+    "empty": "Ingen ideer på denne lista ennå.",
+    "deletedTitle": "Nylig slettet",
+    "restore": "Gjenopprett",
+    "restored": "Lista er gjenopprettet"
   },
   "listSettings": {
     "title": "Innstillinger for {name}",
@@ -406,7 +424,8 @@
     "delete": "Slett lista",
     "deleteHint": "Slettede lister kan gjenopprettes i 30 dager, deretter er de borte for godt.",
     "deleteButton": "Slett lista",
-    "deleteConfirm": "Slette «{name}» for alle på den?"
+    "deleteConfirm": "Slette «{name}» for alle på den?",
+    "defaultVisibility": "Standard for «Gjort» på denne lista"
   },
   "suggest": {
     "button": "Gi meg noe å gjøre",
@@ -440,5 +459,59 @@
     "pending_other": "{count} endringer venter på å bli sendt",
     "failed": "En endring fra {time} kunne ikke lagres: {message}",
     "dismiss": "Lukk"
+  },
+  "join": {
+    "title": "Bli med i «{list}»",
+    "intro": "{name} inviterer deg til denne lista ({role}).",
+    "introAnon": "Du er invitert til denne lista ({role}).",
+    "join": "Bli med",
+    "needAccount": "Du trenger en Someday-konto for å bli med.",
+    "haveAccount": "Jeg har en konto",
+    "newAccount": "Opprett en konto",
+    "invalidTitle": "Invitasjonen er ikke gyldig",
+    "invalid": "Lenken har utløpt, er brukt opp eller trukket tilbake. Be om en ny.",
+    "home": "Gå til Someday"
+  },
+  "share": {
+    "members": "Medlemmer",
+    "you": "deg",
+    "roleOf": "Rolle for {name}",
+    "transfer": "Gjør til eier",
+    "transferConfirm": "Gjøre {name} til eier av lista? Du blir redaktør.",
+    "transferred": "Eierskapet er overført",
+    "removeConfirm": "Fjerne {name} fra lista?",
+    "inviteTitle": "Inviter folk",
+    "inviteIntro": "Alle med lenken kan bli med til den utløper (7 dager) eller er brukt opp.",
+    "role": "De kan",
+    "uses": "Antall personer",
+    "createLink": "Lag invitasjonslenke",
+    "qrLabel": "QR-kode for invitasjonslenken",
+    "inviteRow": "{role}, brukt {used} av {max}, gyldig til {date}",
+    "revoke": "Trekk tilbake",
+    "threshold": "Anonym telling fra så mange medlemmer",
+    "thresholdDefault": "Standard fra serveren",
+    "thresholdHint": "Under dette skjules «gjort av N», og ingen kan loggføre anonymt: i en liten gruppe ville tallet avsløre hvem det var. Minst 3.",
+    "leave": "Forlat lista",
+    "leaveConfirm": "Forlate «{name}»? Du kan bare komme tilbake med en ny invitasjon.",
+    "deleteShared": "Sletting fjerner lista for alle medlemmene."
+  },
+  "nudge": {
+    "title": "Dytt",
+    "intro": "Nå og da, på et tilfeldig tidspunkt, foreslår Someday noe å gjøre. Av til du slår det på.",
+    "enable": "Send meg dytt",
+    "count": "Hvor mange",
+    "per": "Per",
+    "week": "uke",
+    "month": "måned",
+    "window": "Bare mellom",
+    "windowHint": "24-timersklokke, TT:MM. Aldri i stille timer, og maks ett om dagen.",
+    "pause": "Pause",
+    "pausedForever": "På pause til du starter igjen.",
+    "pausedUntil": "På pause til {date}.",
+    "resume": "Start igjen",
+    "pauseWeek": "1 uke",
+    "pauseMonth": "1 måned",
+    "pauseForever": "Til jeg starter igjen",
+    "pauseUntil": "Til dato"
   }
 }

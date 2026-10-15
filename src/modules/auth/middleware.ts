@@ -23,7 +23,9 @@ export function authenticate(publicPaths: Set<string>): MiddlewareHandler<AppEnv
   return async (c, next) => {
     const auth = await readSession(c);
     c.set('auth', auth);
-    const isPublic = publicPaths.has(c.req.path);
+    const isPublic =
+      publicPaths.has(c.req.path) ||
+      [...publicPaths].some((p) => p.endsWith('/*') && c.req.path.startsWith(p.slice(0, -1)));
     if (!auth && !isPublic) {
       return c.json({ error: 'unauthorized', message: 'Login required' }, 401);
     }

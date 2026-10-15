@@ -18,7 +18,7 @@ import { createTranslator } from '../src/shared/i18n/translate';
 
 const NOW = Date.UTC(2026, 9, 15, 10); // 2026-10-15
 const TODAY = '2026-10-15';
-const SEP_TO_MAR = 0b111000000111;
+const SEP_TO_MAR = 0b111100000111;
 
 function item(over: Partial<SuggestItem> = {}): SuggestItem {
   return {

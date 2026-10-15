@@ -25,6 +25,7 @@ import {
 import { type Actor, changeStmt } from '../data/changes';
 import { type Access, requireListRole, restrictLists } from '../lists/access';
 import { anonThreshold } from '../lists/service';
+import { enqueueShared } from '../notify/shared';
 import type { Ctx } from '../types';
 
 export const ID_RE = /^[0-9A-Za-z_-]{10,40}$/;
@@ -317,6 +318,12 @@ async function createItem(
     changeStmt(
       ctx,
       { entity: 'item', entityId: id, listId: all.list_id, op: 'upsert', actor },
+      gate,
+    ),
+    // Other members hear about new ideas on shared lists (§5 `shared`).
+    enqueueShared(
+      ctx,
+      { listId: all.list_id, kind: 'item_added', itemId: id, actorId: access.userId },
       gate,
     ),
   ]);

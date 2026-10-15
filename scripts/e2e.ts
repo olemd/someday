@@ -35,7 +35,9 @@ const server = Bun.spawn(['bun', 'src/platform/bun/server.ts'], {
 
 const cleanup = () => {
   server.kill();
-  rmSync(dir, { recursive: true, force: true });
+  // KEEP_DB=1: leave the database for inspection.
+  if (process.env.KEEP_DB) console.log(`database kept in ${dir}`);
+  else rmSync(dir, { recursive: true, force: true });
 };
 
 let failed = false;
@@ -43,6 +45,7 @@ let failed = false;
 const shots = process.env.SCREENSHOTS;
 let shotNo = 0;
 let shotPage: Page | null = null;
+const errors: string[] = [];
 const step = async (name: string, fn: () => Promise<void>) => {
   process.stdout.write(`• ${name} … `);
   try {
@@ -56,6 +59,8 @@ const step = async (name: string, fn: () => Promise<void>) => {
     console.log('ok');
   } catch (err) {
     console.log('FAILED');
+    if (shotPage) await shotPage.screenshot({ path: join(dir, 'failure.png'), fullPage: true });
+    if (errors.length) console.error(`Console errors so far:\n- ${errors.join('\n- ')}`);
     throw err;
   }
 };
@@ -79,7 +84,6 @@ try {
   const context = await browser.newContext({ locale: 'en-GB', timezoneId: 'Europe/Oslo' });
   const page: Page = await context.newPage();
   shotPage = page;
-  const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(String(e)));
   page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
 
@@ -143,10 +147,57 @@ try {
     await page.getByText('Offline idea').waitFor();
     await page.getByText(/change waiting to be sent/).waitFor();
     await context.setOffline(false);
-    await page.evaluate(() => dispatchEvent(new Event('online')));
+    await page.evaluate('dispatchEvent(new Event("online"))');
     await page.getByText(/change waiting to be sent/).waitFor({ state: 'detached' });
     await page.reload();
     await page.getByText('Offline idea').waitFor();
+  });
+
+  await step('shares a list: a new person signs up through the invite and joins', async () => {
+    await page.getByRole('link', { name: 'Lists' }).first().click();
+    await page.locator('.list-card', { hasText: 'Someday' }).click();
+    await page.getByRole('link', { name: 'List settings' }).click();
+    await page.getByRole('button', { name: 'Create invite link' }).click();
+    const url = (await page.locator('code.break').textContent())!.trim();
+
+    const bobCtx = await browser.newContext({ locale: 'en-GB', timezoneId: 'Europe/Oslo' });
+    const bob = await bobCtx.newPage();
+    bob.on('pageerror', (e) => errors.push(`bob: ${e}`));
+    const bobCdp = await bobCtx.newCDPSession(bob);
+    await bobCdp.send('WebAuthn.enable');
+    await bobCdp.send('WebAuthn.addVirtualAuthenticator', {
+      options: {
+        protocol: 'ctap2',
+        transport: 'internal',
+        hasResidentKey: true,
+        hasUserVerification: true,
+        isUserVerified: true,
+      },
+    });
+    await bob.goto(url);
+    await bob.getByRole('heading', { name: 'Join “Someday”' }).waitFor();
+    await bob.getByRole('button', { name: 'Create an account' }).click();
+    await bob.getByLabel('Your name').fill('Bob');
+    await bob.getByRole('button', { name: 'Create passkey' }).click();
+    await bob.getByRole('button', { name: 'I have saved them' }).click();
+    await bob.getByRole('heading', { name: 'Lists' }).waitFor();
+    await bob.locator('.list-card', { hasText: '2 members' }).click();
+    await bob.getByText('Offline idea').waitFor();
+    await bob.getByLabel('New idea').fill('Idea from Bob');
+    await bob.getByRole('button', { name: 'Add', exact: true }).click();
+    await bob.getByText('Idea from Bob').waitFor();
+    // The outbox is pushed after a short debounce: wait until it has gone out.
+    await bob.locator('.banner[role="status"]').waitFor({ state: 'detached' });
+    await bob.waitForLoadState('networkidle');
+    const problems = await bob.locator('.sync-problem').allTextContents();
+    if (problems.length) throw new Error(`sync problems for Bob: ${problems.join('; ')}`);
+
+    await page.reload();
+    await page.getByText('Bob', { exact: true }).waitFor();
+    await page.goto(`${ORIGIN}/lists`);
+    await page.locator('.list-card', { hasText: 'Someday' }).click();
+    await page.getByText('Idea from Bob').waitFor();
+    await bobCtx.close();
   });
 
   await step('logs in again with the passkey', async () => {

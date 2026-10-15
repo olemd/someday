@@ -15,6 +15,7 @@ import { auth, loadAuth, loadNotices, loadSettings, online, settings } from './l
 import { AdminScreen } from './screens/Admin';
 import { Login, MustRegister, NewDevice, Signup } from './screens/Auth';
 import { HomeScreen } from './screens/Home';
+import { JoinScreen } from './screens/Join';
 import { ItemScreen, NewItemScreen } from './screens/Item';
 import { ListSettingsScreen } from './screens/ListSettings';
 import { ListScreen, ListsScreen } from './screens/Lists';
@@ -133,6 +134,7 @@ function Shell({ children, bare = false }: { children: preact.ComponentChildren;
 function publicScreen(path: string) {
   if (path === '/setup' || path === '/signup') return <Signup />;
   if (path === '/link' || path.startsWith('/link/')) return <NewDevice />;
+  if (path.startsWith('/join/')) return <JoinScreen />;
   return null;
 }
 
@@ -169,6 +171,13 @@ export function App() {
   }
   if (a.must_register) return <Shell bare>{<MustRegister />}</Shell>;
   if (!loaded) return <Shell bare>{<p>{t('app.loading')}</p>}</Shell>;
+  if (path.startsWith('/join/')) {
+    return (
+      <Shell>
+        <JoinScreen />
+      </Shell>
+    );
+  }
   if (pub) navigate('/', true);
   return (
     <Shell>

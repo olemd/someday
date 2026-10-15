@@ -6,8 +6,9 @@ import { healthModule, healthzModule } from './health';
 import { invitesModule } from './invites';
 import { itemsModule, logModule, tagsModule } from './items';
 import { linksModule } from './links';
-import { listsModule } from './lists';
+import { joinModule, listsModule } from './lists';
 import { noticesModule } from './notices';
+import { notifyModule } from './notify';
 import { pushModule } from './push';
 import { settingsModule } from './settings';
 import { snoozeModule, suggestModule } from './suggest';
@@ -25,10 +26,12 @@ export const modules: Module[] = [
   pushModule,
   adminModule,
   listsModule,
+  joinModule,
   itemsModule,
   logModule,
   tagsModule,
   suggestModule,
   snoozeModule,
   syncModule,
+  notifyModule,
 ];

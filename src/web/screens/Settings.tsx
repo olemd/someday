@@ -6,6 +6,7 @@ import { PushSettings } from '../components/PushSettings';
 import { SecuritySettings } from '../components/Security';
 import { showError, toast } from '../components/Toast';
 import { patch, post } from '../lib/api';
+import { calendarDate } from '../lib/fmt';
 import { clearLocalData } from '../lib/data';
 import { localeNames, setLocale, t } from '../lib/i18n';
 import { route } from '../lib/router';
@@ -123,7 +124,7 @@ function Notifications() {
             id="q-start"
             type="text"
             inputMode="numeric"
-            pattern="([01][0-9]|2[0-3]):[0-5][0-9]"
+            pattern={HM}
             value={s.quiet_start}
             onChange={(e) => saveSettings({ quiet_start: e.currentTarget.value })}
           />
@@ -135,7 +136,7 @@ function Notifications() {
             id="q-end"
             type="text"
             inputMode="numeric"
-            pattern="([01][0-9]|2[0-3]):[0-5][0-9]"
+            pattern={HM}
             value={s.quiet_end}
             onChange={(e) => saveSettings({ quiet_end: e.currentTarget.value })}
           />
@@ -148,6 +149,175 @@ function Notifications() {
         {toggle('notify_shared', t('settings.notifyShared'))}
         {toggle('notify_agent', t('settings.notifyAgent'))}
       </fieldset>
+    </section>
+  );
+}
+
+const HM = '([01][0-9]|2[0-3]):[0-5][0-9]';
+
+/** Nudges (§5.1): opt-in, N per week or month at random times in a window, pausable. */
+function Nudges() {
+  const s = settings.value!;
+  const paused = s.nudge_paused_until;
+  const pausedNow = paused === 'forever' || (paused !== null && Date.parse(paused) > Date.now());
+  const [until, setUntil] = useState('');
+  const pauseFor = (days: number) =>
+    saveSettings({ nudge_paused_until: new Date(Date.now() + days * 86_400_000).toISOString() });
+  return (
+    <section class="panel stack" id="nudges" aria-labelledby="nudge-title">
+      <h2 id="nudge-title">{t('nudge.title')}</h2>
+      <p class="hint">{t('nudge.intro')}</p>
+      <label class="check">
+        <input
+          type="checkbox"
+          checked={s.nudge_enabled}
+          onChange={(e) => saveSettings({ nudge_enabled: e.currentTarget.checked })}
+        />
+        {t('nudge.enable')}
+      </label>
+      {s.nudge_enabled && (
+        <>
+          <div class="grid-2">
+            <div class="field">
+              <label for="n-count">{t('nudge.count')}</label>
+              <input
+                id="n-count"
+                type="number"
+                min={0}
+                max={31}
+                value={s.nudge_count}
+                onChange={(e) =>
+                  saveSettings({
+                    nudge_count: Math.max(0, Math.min(31, Number(e.currentTarget.value) || 0)),
+                  })
+                }
+              />
+            </div>
+            <div class="field">
+              <label for="n-period">{t('nudge.per')}</label>
+              <select
+                id="n-period"
+                value={s.nudge_period}
+                onChange={(e) =>
+                  saveSettings({ nudge_period: e.currentTarget.value as 'week' | 'month' })
+                }
+              >
+                <option value="week">{t('nudge.week')}</option>
+                <option value="month">{t('nudge.month')}</option>
+              </select>
+            </div>
+          </div>
+          <fieldset class="field">
+            <legend>{t('nudge.window')}</legend>
+            <div class="inline">
+              <label class="visually-hidden" for="n-from">
+                {t('settings.quietFrom')}
+              </label>
+              <input
+                id="n-from"
+                inputMode="numeric"
+                pattern={HM}
+                value={s.nudge_window_start}
+                onChange={(e) => saveSettings({ nudge_window_start: e.currentTarget.value })}
+              />
+              <span aria-hidden="true">–</span>
+              <label class="visually-hidden" for="n-to">
+                {t('settings.quietTo')}
+              </label>
+              <input
+                id="n-to"
+                inputMode="numeric"
+                pattern={HM}
+                value={s.nudge_window_end}
+                onChange={(e) => saveSettings({ nudge_window_end: e.currentTarget.value })}
+              />
+            </div>
+            <span class="hint">{t('nudge.windowHint')}</span>
+          </fieldset>
+          <div class="stack tight">
+            <strong>{t('nudge.pause')}</strong>
+            {pausedNow ? (
+              <p class="row">
+                <span>
+                  {paused === 'forever'
+                    ? t('nudge.pausedForever')
+                    : t('nudge.pausedUntil', { date: calendarDate(paused!.slice(0, 10)) })}
+                </span>
+                <button
+                  type="button"
+                  class="btn plain small"
+                  onClick={() => saveSettings({ nudge_paused_until: null })}
+                >
+                  {t('nudge.resume')}
+                </button>
+              </p>
+            ) : (
+              <div class="actions start">
+                <button type="button" class="btn plain small" onClick={() => pauseFor(7)}>
+                  {t('nudge.pauseWeek')}
+                </button>
+                <button type="button" class="btn plain small" onClick={() => pauseFor(30)}>
+                  {t('nudge.pauseMonth')}
+                </button>
+                <button
+                  type="button"
+                  class="btn plain small"
+                  onClick={() => saveSettings({ nudge_paused_until: 'forever' })}
+                >
+                  {t('nudge.pauseForever')}
+                </button>
+                <span class="inline">
+                  <label class="visually-hidden" for="n-until">
+                    {t('nudge.pauseUntil')}
+                  </label>
+                  <input
+                    id="n-until"
+                    type="date"
+                    value={until}
+                    onInput={(e) => setUntil(e.currentTarget.value)}
+                  />
+                  <button
+                    type="button"
+                    class="btn plain small"
+                    disabled={!until}
+                    onClick={() =>
+                      saveSettings({
+                        nudge_paused_until: new Date(`${until}T23:59:59`).toISOString(),
+                      })
+                    }
+                  >
+                    {t('nudge.pauseUntil')}
+                  </button>
+                </span>
+              </div>
+            )}
+          </div>
+        </>
+      )}
+    </section>
+  );
+}
+
+function Suggestions() {
+  const s = settings.value!;
+  return (
+    <section class="panel stack" aria-labelledby="sugg-title">
+      <h2 id="sugg-title">{t('settings.suggestions')}</h2>
+      <div class="field">
+        <label for="s-snooze">{t('settings.snoozeDays')}</label>
+        <input
+          id="s-snooze"
+          type="number"
+          min={1}
+          max={365}
+          value={s.snooze_days}
+          onChange={(e) =>
+            saveSettings({
+              snooze_days: Math.max(1, Math.min(365, Number(e.currentTarget.value) || 7)),
+            })
+          }
+        />
+      </div>
     </section>
   );
 }
@@ -165,6 +335,8 @@ export function SettingsScreen() {
       <h1 tabIndex={-1}>{t('nav.settings')}</h1>
       <Profile />
       <Notifications />
+      <Nudges />
+      <Suggestions />
       <SecuritySettings />
       <Invites />
       <div class="actions">

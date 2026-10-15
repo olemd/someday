@@ -153,7 +153,9 @@
     "notifyTypes": "Send me",
     "notifyWindow": "When an idea's season or window opens, or closes in a week",
     "notifyShared": "When others add ideas or share what they did on shared lists",
-    "notifyAgent": "Notifications from connected apps (assistants)"
+    "notifyAgent": "Notifications from connected apps (assistants)",
+    "suggestions": "Suggestions",
+    "snoozeDays": "“Not now” hides an idea for this many days"
   },
   "push": {
     "title": "Push on this device",
@@ -171,7 +173,20 @@
     "testTitle": "Test notification",
     "testBody": "Notifications from Someday work on this device.",
     "passkeyAddedTitle": "New passkey added",
-    "passkeyAddedBody": "New passkey added: {label}, {time}. Not you? Open Someday to revoke it."
+    "passkeyAddedBody": "New passkey added: {label}, {time}. Not you? Open Someday to revoke it.",
+    "sharedSeveral_one": "{name} and {count} other",
+    "sharedSeveral_other": "{name} and {count} others",
+    "sharedAddedOne": "{who} added “{title}”",
+    "sharedDidOne": "{who} did “{title}”",
+    "sharedMany_one": "{who}: {count} update",
+    "sharedMany_other": "{who}: {count} updates",
+    "window_opens": "Its window opens today.",
+    "window_seasonStarts": "The season starts today.",
+    "window_closes": "Its window closes in a week.",
+    "window_seasonEnds": "The season ends in a week.",
+    "windowManyTitle_one": "{count} idea: window opening or closing",
+    "windowManyTitle_other": "{count} ideas: windows opening or closing",
+    "nudgeTitle": "How about this?"
   },
   "notice": {
     "passkeyAdded": "New passkey added: {label}, {time}.",
@@ -396,7 +411,10 @@
     "showing_one": "{count} idea",
     "showing_other": "{count} ideas",
     "noMatch": "Nothing matches.",
-    "empty": "No ideas on this list yet."
+    "empty": "No ideas on this list yet.",
+    "deletedTitle": "Recently deleted",
+    "restore": "Restore",
+    "restored": "List restored"
   },
   "listSettings": {
     "title": "Settings for {name}",
@@ -406,7 +424,8 @@
     "delete": "Delete list",
     "deleteHint": "Deleted lists can be restored for 30 days, then they are gone for good.",
     "deleteButton": "Delete list",
-    "deleteConfirm": "Delete “{name}” for everyone on it?"
+    "deleteConfirm": "Delete “{name}” for everyone on it?",
+    "defaultVisibility": "Default for “Done” on this list"
   },
   "suggest": {
     "button": "Give me something to do",
@@ -440,5 +459,59 @@
     "pending_other": "{count} changes waiting to be sent",
     "failed": "A change from {time} could not be saved: {message}",
     "dismiss": "Dismiss"
+  },
+  "join": {
+    "title": "Join “{list}”",
+    "intro": "{name} invites you to this list ({role}).",
+    "introAnon": "You are invited to this list ({role}).",
+    "join": "Join the list",
+    "needAccount": "You need a Someday account to join.",
+    "haveAccount": "I have an account",
+    "newAccount": "Create an account",
+    "invalidTitle": "Invite not valid",
+    "invalid": "This invite link has expired, been used up or withdrawn. Ask for a new one.",
+    "home": "Go to Someday"
+  },
+  "share": {
+    "members": "Members",
+    "you": "you",
+    "roleOf": "Role for {name}",
+    "transfer": "Make owner",
+    "transferConfirm": "Make {name} the owner of this list? You will become an editor.",
+    "transferred": "Ownership transferred",
+    "removeConfirm": "Remove {name} from this list?",
+    "inviteTitle": "Invite people",
+    "inviteIntro": "Anyone with the link can join until it expires (7 days) or is used up.",
+    "role": "They can",
+    "uses": "Number of people",
+    "createLink": "Create invite link",
+    "qrLabel": "QR code for the invite link",
+    "inviteRow": "{role}, used {used} of {max}, valid until {date}",
+    "revoke": "Withdraw",
+    "threshold": "Anonymous counts from this many members",
+    "thresholdDefault": "Server default",
+    "thresholdHint": "Below this, “done by N” is hidden and nobody can log anonymously: in a small group a count would reveal who it was. At least 3.",
+    "leave": "Leave list",
+    "leaveConfirm": "Leave “{name}”? You can only come back with a new invite.",
+    "deleteShared": "Deleting removes the list for every member."
+  },
+  "nudge": {
+    "title": "Nudges",
+    "intro": "Now and then, at a random moment, Someday suggests something to do. Off until you turn it on.",
+    "enable": "Send me nudges",
+    "count": "How many",
+    "per": "Per",
+    "week": "week",
+    "month": "month",
+    "window": "Only between",
+    "windowHint": "24-hour clock, HH:MM. Never during quiet hours, and at most one a day.",
+    "pause": "Pause",
+    "pausedForever": "Paused until you resume.",
+    "pausedUntil": "Paused until {date}.",
+    "resume": "Resume",
+    "pauseWeek": "1 week",
+    "pauseMonth": "1 month",
+    "pauseForever": "Until I resume",
+    "pauseUntil": "Until date"
   }
 }

@@ -89,10 +89,18 @@ export function RecoveryCodes({ codes, onDone }: { codes: string[]; onDone: () =
 }
 
 /** /setup?token=… (first admin), /signup?invite=… or /signup (open registration). */
-export function Signup() {
+export function Signup(props: { joinToken?: string; onDone?: () => void } = {}) {
   const isSetup = route.value === '/setup';
-  const token = isSetup ? (query.value.get('token') ?? '') : (query.value.get('invite') ?? '');
-  const kind: 'setup' | 'invite' | 'open' = isSetup ? 'setup' : token ? 'invite' : 'open';
+  const token =
+    props.joinToken ??
+    (isSetup ? (query.value.get('token') ?? '') : (query.value.get('invite') ?? ''));
+  const kind: 'setup' | 'invite' | 'open' | 'join' = props.joinToken
+    ? 'join'
+    : isSetup
+      ? 'setup'
+      : token
+        ? 'invite'
+        : 'open';
   const [name, setName] = useState('');
   const [label, setLabel] = useState(defaultPasskeyLabel());
   const [busy, setBusy] = useState(false);
@@ -112,6 +120,7 @@ export function Signup() {
       <RecoveryCodes
         codes={codes}
         onDone={async () => {
+          if (props.onDone) return props.onDone();
           // Drop the token from the address bar and history.
           history.replaceState(null, '', '/');
           await loadAuth();
@@ -187,9 +196,11 @@ export function Signup() {
           </button>
         </form>
       )}
-      <p>
-        <a href="/">{t('auth.haveAccount')}</a>
-      </p>
+      {!props.joinToken && (
+        <p>
+          <a href="/">{t('auth.haveAccount')}</a>
+        </p>
+      )}
     </section>
   );
 }
