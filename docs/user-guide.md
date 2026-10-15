@@ -38,7 +38,7 @@ It works offline too: the same suggester runs on your device.
 
 ![Lists](screenshots/02-lists.png)
 
-![A list with ideas, their context and tags](screenshots/03-list.png)
+![A list: each idea with its status and how long it takes](screenshots/03-list.png)
 
 Add ideas from the home screen or at the top of a list; **With details** opens the form. Everything except the title is optional, and anything left unset fits every filter:
 

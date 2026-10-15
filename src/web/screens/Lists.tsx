@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 /** Lists overview and one list's ideas with search and filters (§3, M2). */
 import { useEffect, useMemo, useState } from 'preact/hooks';
-import type { Item, List } from '../../shared/schemas/items';
+import type { Item } from '../../shared/schemas/items';
 import { showError, toast } from '../components/Toast';
 import { get, post } from '../lib/api';
 import { createList, itemList, lists, newId, ready, saveItem, sync } from '../lib/data';
 import { calendarDate } from '../lib/fmt';
 import { t } from '../lib/i18n';
-import { contextSummary, statusLabel } from '../lib/labels';
+import { durationLabel, monthsLabel, statusLabel } from '../lib/labels';
 import { navigate, query, route, setQuery } from '../lib/router';
 
 /** Lists deleted in the last 30 days can be restored by their owner (§3.1). Online only. */
@@ -137,33 +137,31 @@ function matches(i: Item, filter: Filter, q: string, tag: string | null): boolea
   return true;
 }
 
-export function ItemRow({ item, list }: { item: Item; list?: List }) {
-  const ctx = contextSummary(item);
+/**
+ * One idea in a list: the title and at most two short facts (state, and one
+ * hint of when or how long). Everything else is on the idea's own page.
+ */
+export function ItemRow({ item }: { item: Item }) {
+  const doneForMe = item.done_for_me && item.status !== 'done';
+  const hint = item.duration ? durationLabel(item.duration) : monthsLabel(item.months);
   return (
     <a class="item-row" href={`/items/${item.id}`}>
       <span class="stack tight grow">
         <span class="item-title">{item.title}</span>
-        <span class="meta">
-          {item.status !== 'idea' && (
-            <span class={`badge status-${item.status}`}>{statusLabel(item.status)}</span>
-          )}
-          {item.done_for_me && item.status !== 'done' && (
-            <span class="badge status-done">
-              {item.my_last_done_on
-                ? t('item.doneOn', { date: calendarDate(item.my_last_done_on) })
-                : t('item.doneForMe')}
-            </span>
-          )}
-          {list && <span>{list.name}</span>}
-          {ctx.length > 0 && <span>{ctx.join(' · ')}</span>}
-        </span>
-        {item.tags.length > 0 && (
-          <span class="tags">
-            {item.tags.map((tag) => (
-              <span class="tag" key={tag}>
-                #{tag}
-              </span>
-            ))}
+        {(item.status !== 'idea' || doneForMe || hint) && (
+          <span class="meta">
+            {item.status !== 'idea' ? (
+              <span class={`badge status-${item.status}`}>{statusLabel(item.status)}</span>
+            ) : (
+              doneForMe && (
+                <span class="badge status-done">
+                  {item.my_last_done_on
+                    ? t('item.doneOn', { date: calendarDate(item.my_last_done_on) })
+                    : t('item.doneForMe')}
+                </span>
+              )
+            )}
+            {hint && <span>{hint}</span>}
           </span>
         )}
       </span>
