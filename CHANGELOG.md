@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/olemd/someday/compare/v0.3.1...v0.4.0) (2026-10-15)
+
+
+### Features
+
+* **lists:** own order, hide for me, hearts on shared lists, map links ([dd71fda](https://github.com/olemd/someday/commit/dd71fda2da4b52c7a2e2dc7f3868192bd9da2d36))
+
 ## [0.3.1](https://github.com/olemd/someday/compare/v0.3.0...v0.3.1) (2026-10-15)
 
 
