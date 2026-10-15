@@ -171,11 +171,12 @@ export async function importData(
             : e.visibility === 'anonymous' && members < threshold
               ? 'private'
               : e.visibility;
+        const logId = ulid(now);
         stmts.push({
           sql: `INSERT INTO item_log (id, item_id, user_id, done_on, note, rating, visibility,
                     created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           params: [
-            ulid(now),
+            logId,
             id,
             access.userId,
             e.done_on,
@@ -186,6 +187,17 @@ export async function importData(
             stamp,
           ],
         });
+        // Synced devices must learn about the entry too (shared ones concern everyone).
+        stmts.push(
+          changeStmt(ctx, {
+            entity: 'log',
+            entityId: logId,
+            listId,
+            op: 'upsert',
+            actor,
+            visibleTo: visibility === 'shared' ? null : access.userId,
+          }),
+        );
       }
       stmts.push(changeStmt(ctx, { entity: 'item', entityId: id, listId, op: 'upsert', actor }));
     }

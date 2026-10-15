@@ -119,6 +119,7 @@ describe('import', () => {
     const dry = await post('dry_run=true', zip);
     expect(dry.body).toMatchObject({ lists: 1, items: 1, log_entries: 1, tags: 1, dry_run: true });
     expect(await call(fresh, 'GET', '/api/items')).toEqual([]);
+    const before = (await call(fresh, 'GET', '/api/sync?since=0')).cursor;
     const real = await post('dry_run=false', zip);
     expect(real.status).toBe(200);
     const items = await call(fresh, 'GET', '/api/items');
@@ -129,6 +130,8 @@ describe('import', () => {
     expect(
       (await call(fresh, 'GET', '/api/lists')).map((l: { name: string }) => l.name).sort(),
     ).toEqual(['Someday', 'Someday']);
+    // Imported log entries reach already-synced devices through the change log.
+    expect((await call(fresh, 'GET', `/api/sync?since=${before}`)).log).toHaveLength(1);
   });
 
   it('merges a JSON export into an existing list', async () => {
