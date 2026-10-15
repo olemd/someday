@@ -18,13 +18,14 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@babel/core": "^8",
     "@biomejs/biome": "2.5.15",
     "@cloudflare/vitest-pool-workers": "^0.22.0",
     "@cloudflare/workers-types": "^5.20261007.1",
     "@preact/preset-vite": "^2.10.6",
-    "@babel/core": "^8",
     "@types/bun": "^1.4.2",
     "license-checker-rseidelsohn": "^5.0.1",
+    "playwright": "1.63.0",
     "typescript": "^7",
     "vite": "^8.3.3",
     "vitest": "^4.1",
@@ -49,6 +50,7 @@
     "i18n:check": "bun scripts/i18n-check.ts",
     "licenses": "license-checker-rseidelsohn --production --excludePrivatePackages --onlyAllow \"MIT;MIT-0;ISC;BSD-2-Clause;BSD-3-Clause;Apache-2.0;0BSD;BlueOak-1.0.0;CC0-1.0;Unlicense;Python-2.0\"",
     "db:migrate:local": "bun run render-config && wrangler d1 migrations apply DB --local",
-    "vapid": "bun scripts/vapid.ts"
+    "vapid": "bun scripts/vapid.ts",
+    "e2e": "bun run build:web && bun scripts/e2e.ts"
   }
 }

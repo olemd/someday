@@ -745,3 +745,64 @@ table.data td {
 .break {
   overflow-wrap: anywhere;
 }
+
+fieldset.panel {
+  margin: 0;
+  min-width: 0;
+}
+fieldset.panel > legend {
+  font-weight: 650;
+  padding: 0 0.3rem;
+}
+.notes {
+  white-space: normal;
+}
+.notes ul,
+.notes ol {
+  margin: 0.4rem 0;
+  padding-inline-start: 1.4rem;
+}
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+.tabs a {
+  padding: 0.4rem 0.8rem;
+  border-radius: 999px;
+  text-decoration: none;
+  color: var(--muted);
+  border: 1px solid var(--rule);
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+}
+.tabs a[aria-current='page'] {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+  font-weight: 600;
+}
+.quick-add {
+  display: flex;
+  gap: 0.5rem;
+}
+.sync-problem {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  justify-content: center;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  background: var(--track);
+  border-bottom: 2px solid var(--danger);
+}
+
+.grow {
+  flex: 1;
+  min-width: 0;
+}
+
+.flush {
+  margin: 0;
+}

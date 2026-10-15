@@ -6,6 +6,7 @@ import { PushSettings } from '../components/PushSettings';
 import { SecuritySettings } from '../components/Security';
 import { showError, toast } from '../components/Toast';
 import { patch, post } from '../lib/api';
+import { clearLocalData } from '../lib/data';
 import { localeNames, setLocale, t } from '../lib/i18n';
 import { route } from '../lib/router';
 import { auth, loadAuth, loadSettings, settings, type Settings } from '../lib/store';
@@ -173,6 +174,7 @@ export function SettingsScreen() {
           onClick={async () => {
             await post('/auth/logout').catch(() => undefined);
             navigator.serviceWorker?.controller?.postMessage('clear-api-cache');
+            await clearLocalData();
             location.assign('/');
           }}
         >
