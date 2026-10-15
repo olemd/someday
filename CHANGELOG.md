@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.1](https://github.com/olemd/someday/compare/v0.3.0...v0.3.1) (2026-10-15)
+
+
+### Bug Fixes
+
+* **oauth:** fetch client metadata documents on Cloudflare Workers ([1e68dbf](https://github.com/olemd/someday/commit/1e68dbfa56d52f7f24afb34cfcf2caf018e72c79))
+
 ## [0.3.0](https://github.com/olemd/someday/compare/v0.2.0...v0.3.0) (2026-10-15)
 
 
