@@ -1,6 +1,6 @@
 {
   "name": "someday",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "private": true,
   "description": "Things to do or find out about some day: a slow idea list with a \"give me something to do\" button",
   "license": "AGPL-3.0-or-later",

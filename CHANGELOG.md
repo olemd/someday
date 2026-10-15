@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.5.0](https://github.com/olemd/someday/compare/v0.4.0...v0.5.0) (2026-10-15)
+
+
+### Features
+
+* **web:** drag and drop to change a list's order ([b57a885](https://github.com/olemd/someday/commit/b57a885b4d62a578875f08afa4eafee98a2f5666))
+
+
+### Bug Fixes
+
+* **web:** lists with ideas crashed after updating to 0.4.0 ([97f0a59](https://github.com/olemd/someday/commit/97f0a59d365bef2c39ce7419d9ce9599a991357c))
+
 ## [0.4.0](https://github.com/olemd/someday/compare/v0.3.1...v0.4.0) (2026-10-15)
 
 
