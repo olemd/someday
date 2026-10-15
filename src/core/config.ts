@@ -52,7 +52,8 @@ const ConfigSchema = z.object({
    * signup hashes 10 codes in one request: 100k × 10 ≈ 86 ms CPU, far over
    * the Workers free tier's 10 ms. Each code carries an 80-bit random secret,
    * so offline guessing is infeasible regardless; 2 000 keeps signup at
-   * ~2–3 ms. Raise it on a paid plan (Workers cap it at 100 000).
+   * ~2–3 ms. Raise it on a paid plan (Workers cap it at 100 000). Each code
+   * stores the count it was hashed with, so a change only affects new codes.
    */
   RECOVERY_PBKDF2_ITERATIONS: int(1000, 100_000).default(2_000),
   /** Auth attempts per IP per 10 minutes (login, recovery, setup, link codes). */

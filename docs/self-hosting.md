@@ -175,7 +175,7 @@ Settings are environment variables with the same names as the Cloudflare vars an
 | `DEVICE_LINK_TTL_MIN` | `15` | How long a link for adding a device is valid. |
 | `SESSION_TTL_DAYS` | `90` | Session lifetime. |
 | `AUTH_RATE_LIMIT` | `30` | Sign-in, recovery, setup and link-code attempts per IP per 10 minutes. |
-| `RECOVERY_PBKDF2_ITERATIONS` | `2000` | Hashing cost for recovery codes (1 000–100 000). The low default is for Cloudflare's free tier. **Changing it makes existing recovery codes stop working**, so set it before people sign up, or ask them to create new codes. |
+| `RECOVERY_PBKDF2_ITERATIONS` | `2000` | Hashing cost for recovery codes (1 000–100 000). The low default is for Cloudflare's free tier. Each code keeps the count it was created with, so a change only affects new codes. |
 
 **Lists, suggestions and notifications**
 

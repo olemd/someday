@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 /**
  * Recovery codes (§2.1): 10 one-time codes, shown once, stored as
- * PBKDF2-SHA-256 hashes with a per-code salt.
+ * PBKDF2-SHA-256 hashes with a per-code salt and the iteration count used,
+ * so RECOVERY_PBKDF2_ITERATIONS can change without breaking existing codes.
  *
  * A code looks like `ABCD-EFGH-JKMN-PQRS-TVWX`: the first group is a public
  * lookup key (stored in clear), the remaining 80 bits are the secret. A login
@@ -44,11 +45,8 @@ export async function newRecoveryCodes(
     codes.map(async (code) => {
       const { lookup, secret } = splitRecoveryCode(code)!;
       const salt = randomToken(16);
-      return {
-        lookup,
-        salt,
-        hash: await pbkdf2Hex(secret, salt, ctx.config.RECOVERY_PBKDF2_ITERATIONS),
-      };
+      const iterations = ctx.config.RECOVERY_PBKDF2_ITERATIONS;
+      return { lookup, salt, iterations, hash: await pbkdf2Hex(secret, salt, iterations) };
     }),
   );
   for (const r of rows) {
@@ -56,9 +54,9 @@ export async function newRecoveryCodes(
     // (20 bits, few codes); OR REPLACE would steal it, so IGNORE and accept
     // that that one code will not work rather than break someone else's.
     stmts.push({
-      sql: `INSERT OR IGNORE INTO recovery_codes (lookup, user_id, salt, hash)
-            SELECT ?, ?, ?, ? ${guard ? `WHERE ${guard.sql}` : ''}`,
-      params: [r.lookup, userId, r.salt, r.hash, ...(guard?.params ?? [])],
+      sql: `INSERT OR IGNORE INTO recovery_codes (lookup, user_id, salt, hash, iterations)
+            SELECT ?, ?, ?, ?, ? ${guard ? `WHERE ${guard.sql}` : ''}`,
+      params: [r.lookup, userId, r.salt, r.hash, r.iterations, ...(guard?.params ?? [])],
     });
   }
   return { codes, stmts };
@@ -68,12 +66,19 @@ export async function newRecoveryCodes(
 export async function redeemRecoveryCode(ctx: Ctx, input: string): Promise<string | null> {
   const parts = splitRecoveryCode(input);
   if (!parts) return null;
-  const row = await ctx.db.first<{ user_id: string; salt: string; hash: string }>(
-    'SELECT user_id, salt, hash FROM recovery_codes WHERE lookup = ? AND used_at IS NULL',
+  const row = await ctx.db.first<{
+    user_id: string;
+    salt: string;
+    hash: string;
+    iterations: number | null;
+  }>(
+    'SELECT user_id, salt, hash, iterations FROM recovery_codes WHERE lookup = ? AND used_at IS NULL',
     parts.lookup,
   );
   if (!row) return null;
-  const hash = await pbkdf2Hex(parts.secret, row.salt, ctx.config.RECOVERY_PBKDF2_ITERATIONS);
+  // Codes from before migration 0005 have no stored count: use the configured one.
+  const iterations = row.iterations ?? ctx.config.RECOVERY_PBKDF2_ITERATIONS;
+  const hash = await pbkdf2Hex(parts.secret, row.salt, iterations);
   if (hash !== row.hash) return null;
   const r = await ctx.db.run(
     'UPDATE recovery_codes SET used_at = ? WHERE lookup = ? AND used_at IS NULL',

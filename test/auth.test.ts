@@ -294,6 +294,21 @@ describe('login, re-auth and sessions', () => {
 });
 
 describe('recovery codes', () => {
+  it('keep working after RECOVERY_PBKDF2_ITERATIONS changes', async () => {
+    const r = await signup(harness(), await newKey(), 'setup', BOOTSTRAP);
+    const [first, second]: string[] = r.body.recovery_codes;
+    const changed = harness({ env: { RECOVERY_PBKDF2_ITERATIONS: '3000' } });
+    expect(
+      (await changed.json('/api/auth/recovery', { method: 'POST', json: { code: first } })).status,
+    ).toBe(200);
+    // Codes from before migration 0005 have no stored count and use the configured one.
+    await db.run('UPDATE recovery_codes SET iterations = NULL');
+    expect(
+      (await harness().json('/api/auth/recovery', { method: 'POST', json: { code: second } }))
+        .status,
+    ).toBe(200);
+  });
+
   it('logs in once and only allows registering a new passkey', async () => {
     const h0 = harness();
     const r = await signup(h0, await newKey(), 'setup', BOOTSTRAP);
