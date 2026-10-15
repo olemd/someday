@@ -138,21 +138,38 @@ async function setSecrets(env: string | undefined, vapidSubject: string): Promis
   return setupToken;
 }
 
-/** A dashboard link that opens "Create API token" with the permissions CI needs. */
-function tokenTemplateUrl(customDomain: boolean, name: string): string {
-  const perms = [
-    { key: 'workers_scripts', type: 'edit' },
-    { key: 'd1', type: 'edit' },
-    { key: 'account_settings', type: 'read' },
+/** The permissions CI needs, as dashboard template keys and as the labels people see. */
+function tokenPermissions(customDomain: boolean) {
+  return [
+    { key: 'workers_scripts', type: 'edit', label: 'Account → Workers Scripts → Edit' },
+    { key: 'd1', type: 'edit', label: 'Account → D1 → Edit' },
+    { key: 'account_settings', type: 'read', label: 'Account → Account Settings → Read' },
     ...(customDomain
       ? [
-          { key: 'workers_routes', type: 'edit' },
-          { key: 'dns', type: 'edit' },
+          { key: 'workers_routes', type: 'edit', label: 'Zone → Workers Routes → Edit' },
+          { key: 'dns', type: 'edit', label: 'Zone → DNS → Edit' },
         ]
       : []),
   ];
-  const q = `permissionGroupKeys=${encodeURIComponent(JSON.stringify(perms))}&accountId=*&zoneId=all&name=${encodeURIComponent(name)}`;
-  return `https://dash.cloudflare.com/profile/api-tokens?${q}`;
+}
+
+/**
+ * A dashboard link that opens "Create API token" with the permissions filled
+ * in, in exactly the encoding of Cloudflare's documented examples
+ * (developers.cloudflare.com/fundamentals/api/how-to/account-owned-token-template):
+ * `accountId=%2A`, and a name with only letters, digits and spaces.
+ */
+function tokenTemplateUrl(customDomain: boolean, name: string): string {
+  const perms = tokenPermissions(customDomain).map(({ key, type }) => ({ key, type }));
+  const safeName = name
+    .replace(/[^A-Za-z0-9 ]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return (
+    'https://dash.cloudflare.com/profile/api-tokens' +
+    `?permissionGroupKeys=${encodeURIComponent(JSON.stringify(perms))}` +
+    `&accountId=%2A&zoneId=all&name=${encodeURIComponent(safeName)}`
+  );
 }
 
 /** Check a pasted API token: active, and able to see this account's D1 and Workers. */
@@ -328,7 +345,10 @@ const variables: Record<string, string> = {
     : {}),
 };
 const repo = await githubRepo();
-const tokenUrl = tokenTemplateUrl(!!customDomain, `${workerName} deploy (GitHub Actions)`);
+const tokenUrl = tokenTemplateUrl(!!customDomain, `${workerName} deploy GitHub Actions`);
+const permissionList = tokenPermissions(!!customDomain)
+  .map((p) => `    - ${p.label}`)
+  .join('\n');
 if (repo) {
   for (const [k, v] of Object.entries(variables)) {
     await exec(['gh', 'variable', 'set', k, '--repo', repo, '--body', v]);
@@ -353,6 +373,10 @@ the permissions (and restrict it to your account/zone if you like), create the
 token, and paste it below. It is verified, then sent straight to GitHub.
 
   ${tokenUrl}
+
+If the page does not fill in the permissions, choose "Create Custom Token"
+and add these:
+${permissionList}
 `);
     for (;;) {
       const token = askHidden('Cloudflare API token (input hidden; empty = skip):');
@@ -393,7 +417,9 @@ token, and paste it below. It is verified, then sent straight to GitHub.
 } else {
   console.log(`Set these in GitHub → Settings → Secrets and variables → Actions:
   Secrets:   CLOUDFLARE_ACCOUNT_ID=${accountId}
-             CLOUDFLARE_API_TOKEN=<create it here: ${tokenUrl}>
+             CLOUDFLARE_API_TOKEN=<create it here: ${tokenUrl}
+               (or a custom token with:
+${permissionList})>
   Variables: ${Object.entries(variables)
     .map(([k, v]) => `${k}=${v}`)
     .join('\n             ')}`);
