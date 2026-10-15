@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.0](https://github.com/olemd/someday/compare/v0.5.0...v0.6.0) (2026-10-15)
+
+
+### Features
+
+* **web:** offer a reload when a new release is out ([f6ddf7a](https://github.com/olemd/someday/commit/f6ddf7a544c89360836eebef94ca66c9ed411ba4))
+
 ## [0.5.0](https://github.com/olemd/someday/compare/v0.4.0...v0.5.0) (2026-10-15)
 
 
