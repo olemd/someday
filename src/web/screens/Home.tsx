@@ -82,7 +82,7 @@ function Filters({ f, set }: { f: SuggestFilters; set: (f: SuggestFilters) => vo
           name="time"
           value={f.max_duration}
           options={DURATIONS}
-          label={(d) => t('suggest.upTo', { what: durationLabel(d) })}
+          label={durationLabel}
           onChange={(v) => set({ ...f, max_duration: v })}
         />
         <ChipGroup
@@ -98,7 +98,7 @@ function Filters({ f, set }: { f: SuggestFilters; set: (f: SuggestFilters) => vo
           name="cost"
           value={f.max_cost}
           options={COSTS}
-          label={(c) => (c === 0 ? costLabel(0) : t('suggest.atMost', { what: costLabel(c) }))}
+          label={costLabel}
           onChange={(v) => set({ ...f, max_cost: v })}
         />
         <ChipGroup

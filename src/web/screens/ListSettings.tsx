@@ -147,6 +147,12 @@ export function ListSettingsScreen() {
   const list = lists.value.find((l) => l.id === id);
   const [name, setName] = useState(list?.name ?? '');
   const [threshold, setThreshold] = useState(String(list?.anon_count_min_members ?? ''));
+  // The list may arrive after the first render (opened directly, data still loading).
+  useEffect(() => {
+    if (!list) return;
+    setName(list.name);
+    setThreshold(String(list.anon_count_min_members ?? ''));
+  }, [list?.id, list?.name, list?.anon_count_min_members]);
   const me = auth.value?.user?.id;
 
   if (!ready.value) return <p>{t('app.loading')}</p>;
