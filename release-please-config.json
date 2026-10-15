@@ -5,7 +5,8 @@
     ".": {
       "release-type": "node",
       "package-name": "someday",
-      "changelog-path": "CHANGELOG.md"
+      "changelog-path": "CHANGELOG.md",
+      "include-component-in-tag": false
     }
   }
 }
