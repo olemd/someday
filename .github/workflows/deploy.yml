@@ -1,15 +1,24 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
-# Deploys main to Cloudflare after a green CI run (§10): D1 migrations first
-# (they are additive), then the Worker, then a smoke test. Forks without
-# Cloudflare secrets skip with a notice instead of failing.
+# Deploys a release to Cloudflare: tests, D1 migrations (additive, so they go
+# first), the Worker, then a smoke test of /api/health for the deployed SHA.
+# Called by release-please.yml when a release is created; can also be run by
+# hand for a tag or commit (e.g. to redeploy). Forks without Cloudflare
+# secrets skip with a notice instead of failing.
 name: Deploy
 
 on:
-  workflow_run:
-    workflows: [CI]
-    types: [completed]
-    branches: [main]
+  workflow_call:
+    inputs:
+      ref:
+        description: Commit to deploy
+        required: true
+        type: string
   workflow_dispatch:
+    inputs:
+      ref:
+        description: Tag or commit to deploy (e.g. v0.2.0)
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -20,9 +29,6 @@ concurrency:
 
 jobs:
   deploy:
-    if: >-
-      github.event_name == 'workflow_dispatch' ||
-      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
     runs-on: ubuntu-latest
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -32,7 +38,6 @@ jobs:
       WORKER_NAME: ${{ vars.WORKER_NAME }}
       CUSTOM_DOMAIN: ${{ vars.CUSTOM_DOMAIN }}
       SOURCE_URL: ${{ vars.SOURCE_URL }}
-      GIT_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
     steps:
       - name: Check Cloudflare configuration
         id: check
@@ -54,7 +59,10 @@ jobs:
       - uses: actions/checkout@v7
         if: steps.check.outputs.enabled == 'true'
         with:
-          ref: ${{ env.GIT_SHA }}
+          ref: ${{ inputs.ref }}
+      - name: Resolve commit
+        if: steps.check.outputs.enabled == 'true'
+        run: echo "GIT_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
       - uses: oven-sh/setup-bun@v2
         if: steps.check.outputs.enabled == 'true'
         with:
@@ -65,6 +73,10 @@ jobs:
           node-version: 24
       - if: steps.check.outputs.enabled == 'true'
         run: bun install --frozen-lockfile
+      # The release commit itself must pass, on both platforms, before it ships.
+      - name: Tests
+        if: steps.check.outputs.enabled == 'true'
+        run: bun run test && bun run test:bun
       - name: Build
         if: steps.check.outputs.enabled == 'true'
         run: bun run build
@@ -73,7 +85,7 @@ jobs:
         run: bunx wrangler d1 migrations apply DB --remote
       - name: Deploy Worker
         if: steps.check.outputs.enabled == 'true'
-        run: bunx wrangler deploy
+        run: bunx wrangler deploy --env ''
       - name: Smoke test
         if: steps.check.outputs.enabled == 'true'
         run: bun scripts/smoke-test.ts

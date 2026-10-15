@@ -10,7 +10,7 @@
  *      keys (existing ones are kept: rotating the pepper would log everyone
  *      out, new VAPID keys would break every push subscription),
  *   4. optionally the same for a `preview` environment (PR label `preview`),
- *   5. with `gh`: sets the GitHub Variables and the CLOUDFLARE_ACCOUNT_ID and
+ *   5. with `gh`: lets Actions open release PRs, sets the GitHub Variables and the CLOUDFLARE_ACCOUNT_ID and
  *      CLOUDFLARE_API_TOKEN secrets CI needs (the API token is created by you
  *      in the Cloudflare dashboard from a prefilled link, then pasted here,
  *      verified, and piped to `gh` — never written to disk or argv),
@@ -411,8 +411,48 @@ ${permissionList}
     ]);
     console.log('  label "preview"');
   }
-  if (confirm('Run the Deploy workflow on GitHub now to check that CI can deploy?', false)) {
-    await run(['gh', 'workflow', 'run', 'deploy.yml', '--repo', repo]);
+  // release-please opens the release PR with GITHUB_TOKEN, which GitHub
+  // only allows when "Allow GitHub Actions to create and approve pull
+  // requests" is on. Default token permissions stay read-only.
+  await exec([
+    'gh',
+    'api',
+    '-X',
+    'PUT',
+    `repos/${repo}/actions/permissions/workflow`,
+    '-f',
+    'default_workflow_permissions=read',
+    '-F',
+    'can_approve_pull_request_reviews=true',
+  ]);
+  console.log('  Actions may open release pull requests');
+  // Production gets releases only. Offer to redeploy the latest one through
+  // GitHub, which checks that the API token works.
+  const latest = await exec(
+    [
+      'gh',
+      'release',
+      'list',
+      '--repo',
+      repo,
+      '--limit',
+      '1',
+      '--json',
+      'tagName',
+      '-q',
+      '.[0].tagName',
+    ],
+    { allowFail: true },
+  );
+  const tag = latest.out.trim();
+  if (
+    tag &&
+    confirm(
+      `Redeploy the latest release (${tag}) through GitHub Actions to check that CI can deploy?`,
+      false,
+    )
+  ) {
+    await run(['gh', 'workflow', 'run', 'deploy.yml', '--repo', repo, '-f', `ref=${tag}`]);
     console.log(`Follow it with: gh run watch --repo ${repo}`);
   }
 } else {
@@ -463,4 +503,5 @@ Preview environment admin:
     : ''
 }
 
-From now on, every push to main deploys through GitHub Actions.`);
+From now on, production is updated by releases: merge the release pull request
+that release-please keeps up to date on GitHub, and the release is deployed.`);

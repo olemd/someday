@@ -12,6 +12,11 @@ Read `SPEC.md` first; it is the source of truth for behaviour. The sibling proje
 - `bun run bootstrap` — interactive Cloudflare + GitHub setup (operator use; touches real accounts, never run it from automation).
 - Before committing: lint, typecheck, i18n:check, test, test:bun, build.
 
+## Commits and releases
+
+- Every commit message is a Conventional Commit (`feat(scope): …`, `fix: …`). release-please reads them: `feat` → minor, `fix` → patch; `docs`, `chore`, `test`, `ci`, `refactor`, `style` do not release. A user-visible change must be `feat` or `fix`, or it never ships.
+- Production deploys **only for releases**: merging the release PR creates the release, and `release-please.yml` calls `deploy.yml` for it. Pushes to `main` are not deployed. Redeploy by hand with `gh workflow run deploy.yml -f ref=<tag>`.
+
 ## Layout and boundaries
 
 - `src/core/` — pure logic (config, crypto, time zones, settings, suggester, nudge planner). No Hono, no platform APIs. Unit-testable.

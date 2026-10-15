@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 # Checks on every PR and push to main (§10): typecheck, lint, unit and
 # integration tests against both platform adapters (Workers pool and
-# Bun/SQLite), build. container.yml builds the Podman image; deploy.yml
-# deploys main after this workflow passes.
+# Bun/SQLite), build. container.yml builds the Podman image. Production is
+# only deployed for releases (release-please.yml → deploy.yml).
 name: CI
 
 on:

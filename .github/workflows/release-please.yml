@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Releases and production deploys. Every push to main updates a release PR
+# (version bump + CHANGELOG from Conventional Commits: feat → minor,
+# fix → patch). Merging that PR creates the release, and only then is the
+# release deployed to Cloudflare. Pushes to main without a release never
+# reach production.
+name: Release Please
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag: ${{ steps.release.outputs.tag_name }}
+      sha: ${{ steps.release.outputs.sha }}
+    steps:
+      - uses: googleapis/release-please-action@v5
+        id: release
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+  # Called from here because a release created with GITHUB_TOKEN does not
+  # trigger other workflows (so `on: release` would never fire).
+  deploy:
+    needs: release-please
+    if: ${{ needs.release-please.outputs.release_created == 'true' }}
+    permissions:
+      contents: read
+    uses: ./.github/workflows/deploy.yml
+    with:
+      ref: ${{ needs.release-please.outputs.sha }}
+    secrets: inherit

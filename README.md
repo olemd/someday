@@ -26,7 +26,7 @@ English and Norwegian Bokmål; adding a language is one JSON file. Specified in 
 
 Two targets from the same code:
 
-- **Cloudflare Workers** (below): free tier, deploys on every push to `main`.
+- **Cloudflare Workers** (below): free tier, deployed automatically for each release.
 - **Your own server** with Podman: see **[docs/self-hosting.md](docs/self-hosting.md)**.
 
 ### On Cloudflare
@@ -70,7 +70,9 @@ It is safe to run again, for example to add the GitHub settings later. Without `
 
 ### Continuous deployment from GitHub
 
-Every PR and push runs CI: typecheck, lint, i18n check, the test suite against **both** platform adapters (Workers pool with D1, and Bun with SQLite), build, licence check, and a Podman image build with a smoke test (build only, nothing is published). On `main`, once CI is green, `deploy.yml` applies D1 migrations, deploys the Worker and smoke-tests `/api/health` for the deployed git SHA.
+Every PR and push runs CI: typecheck, lint, i18n check, the test suite against **both** platform adapters (Workers pool with D1, and Bun with SQLite), build, licence check, and a Podman image build with a smoke test (build only, nothing is published).
+
+Production gets **releases only**. [release-please](https://github.com/googleapis/release-please) keeps a release pull request up to date from the [Conventional Commits](https://www.conventionalcommits.org/) on `main` (`feat` → minor, `fix` → patch; `docs`, `chore`, `test`, `ci` do not release). Merging it tags the release, writes the CHANGELOG and runs `deploy.yml`: tests on both platforms, D1 migrations, deploy, and a smoke test of `/api/health` for the released commit. To redeploy a release by hand: `gh workflow run deploy.yml -f ref=v0.2.0`. Release PRs need **Settings → Actions → General → Allow GitHub Actions to create and approve pull requests** (`bun run bootstrap` turns it on).
 
 Set these in **Settings → Secrets and variables → Actions**:
 

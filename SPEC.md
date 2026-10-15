@@ -271,7 +271,7 @@ Tool results are compact JSON + short text summary. All MCP writes recorded in `
 ## 10. CI/CD (GitHub Actions)
 
 - **PR:** install (bun), typecheck, lint, unit tests, integration tests **against both platform adapters** (Workers pool + Bun/SQLite), build, `podman build` of the container image (build only, not published) so self-hosting can't silently rot.
-- **Push to `main`:** same checks → `wrangler d1 migrations apply --remote` → `wrangler deploy`.
+- **Push to `main`:** same checks; release-please updates the release PR. **Release (merging that PR):** tests → `wrangler d1 migrations apply --remote` → `wrangler deploy` → smoke test. Production gets releases only (decided 2026-10-15; replaces "deploy every push to `main`").
 - Optional preview environment (`env.preview`, separate D1) deployed on PR label `preview`.
 - Repo secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`. Document required token permissions in README.
 - README: self-hosting guide (fork → create D1 → set secrets → push), consistent with stoppeklokke.
