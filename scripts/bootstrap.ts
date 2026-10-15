@@ -74,7 +74,7 @@ async function existingSecrets(env?: string): Promise<Set<string>> {
   // does not, stop: guessing "no secrets yet" would generate a new
   // TOKEN_PEPPER (logging everyone out) and new VAPID keys (breaking push).
   const r = await exec(
-    ['bunx', 'wrangler', 'secret', 'list', '--format', 'json', ...(env ? ['--env', env] : [])],
+    ['bunx', 'wrangler', 'secret', 'list', '--format', 'json', '--env', env ?? ''],
     { allowFail: true },
   );
   let names: { name: string }[] | null = null;
@@ -130,7 +130,7 @@ async function setSecrets(env: string | undefined, vapidSubject: string): Promis
     console.log('All Worker secrets are already set; kept them.');
     return null;
   }
-  await wrangler(['secret', 'bulk', ...(env ? ['--env', env] : [])], {
+  await wrangler(['secret', 'bulk', '--env', env ?? ''], {
     stdin: JSON.stringify(secrets),
     echo: true,
   });
@@ -273,7 +273,7 @@ writeEnvFile(values);
 step('Build, migrate and deploy');
 await run(['bun', 'run', 'build']);
 await run(['bunx', 'wrangler', 'd1', 'migrations', 'apply', 'DB', '--remote']);
-let deployOut = (await run(['bunx', 'wrangler', 'deploy'])).out;
+let deployOut = (await run(['bunx', 'wrangler', 'deploy', '--env', ''])).out;
 if (!customDomain) {
   const url = workersDevUrl(deployOut);
   const origin =
@@ -283,7 +283,7 @@ if (!customDomain) {
     writeEnvFile(values);
     console.log(`PUBLIC_ORIGIN = ${origin}; deploying again with it.`);
     await run(['bun', 'run', 'render-config']);
-    deployOut = (await run(['bunx', 'wrangler', 'deploy'])).out;
+    deployOut = (await run(['bunx', 'wrangler', 'deploy', '--env', ''])).out;
   }
 }
 const origin = values.PUBLIC_ORIGIN!;
@@ -400,16 +400,23 @@ token, and paste it below. It is verified, then sent straight to GitHub.
 }
 
 step('Check');
-for (let i = 0; i < 10; i++) {
+// A new secret takes a moment to reach every isolate: retry for up to a minute.
+type Health = { status: string; config_errors: string[] };
+let health = null as Health | null;
+for (let i = 0; i < 12; i++) {
   try {
-    const res = await fetch(`${origin}/api/health`);
-    const h = (await res.json()) as { status: string; config_errors: string[] };
-    console.log(`${origin}/api/health → ${h.status}`);
-    for (const e of h.config_errors) console.log(`  ! ${e}`);
-    break;
+    health = (await (await fetch(`${origin}/api/health`)).json()) as Health;
+    if (health?.status === 'ok') break;
   } catch {
-    await Bun.sleep(3000);
+    // not reachable yet (DNS for a new custom domain can take a moment)
   }
+  await Bun.sleep(5000);
+}
+if (health) {
+  console.log(`${origin}/api/health → ${health.status}`);
+  for (const e of health.config_errors) console.log(`  ! ${e}`);
+} else {
+  console.log(`${origin}/api/health did not answer yet; check it again in a few minutes.`);
 }
 
 console.log(`
