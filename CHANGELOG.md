@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.3.0](https://github.com/olemd/someday/compare/v0.2.0...v0.3.0) (2026-10-15)
+
+
+### Features
+
+* **web:** simpler list rows: title plus at most two facts ([42df215](https://github.com/olemd/someday/commit/42df215bd27e6ee1e4ccfeafd51f7284401fae0f))
+
+
+### Bug Fixes
+
+* **auth:** store the PBKDF2 iteration count with each recovery code ([bc9adb0](https://github.com/olemd/someday/commit/bc9adb061d1fbdc95bf5b344515e7cbf2586ad26))
+
 ## [0.2.0](https://github.com/olemd/someday/compare/v0.1.1...v0.2.0) (2026-10-15)
 
 
