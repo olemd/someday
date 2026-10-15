@@ -86,6 +86,10 @@ try {
     await page.getByRole('heading', { name: 'Edit idea' }).waitFor();
     await page.getByRole('button', { name: 'Cancel' }).click();
     await page.getByRole('heading', { name: 'Try ice bathing' }).waitFor();
+    // Rare actions live in the More menu.
+    await page.getByText('More', { exact: true }).click();
+    await page.getByRole('button', { name: 'Drop' }).click();
+    await page.locator('.badge.status-archived').waitFor();
   });
 
   await step('suggests something with reasons', async () => {

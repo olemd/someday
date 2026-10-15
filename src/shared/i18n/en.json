@@ -49,7 +49,8 @@
     "lastUsed": "Last used {date}",
     "neverUsed": "Never used",
     "error": "Something went wrong: {message}",
-    "networkError": "Could not reach the server. Check your connection and try again."
+    "networkError": "Could not reach the server. Check your connection and try again.",
+    "more": "More"
   },
   "auth": {
     "setupTitle": "Set up Someday",

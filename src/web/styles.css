@@ -852,3 +852,51 @@ select.compact {
 details.panel:not([open]) {
   padding-block: 0.25rem;
 }
+
+/* ── "More" menu ────────────────────────────────────────────────────── */
+
+.more-menu {
+  position: relative;
+}
+.more-menu > summary {
+  list-style: none;
+}
+.more-menu > summary::-webkit-details-marker {
+  display: none;
+}
+.more-menu > summary::after {
+  content: '▾';
+  margin-inline-start: 0.4rem;
+}
+.more-menu > ul {
+  position: absolute;
+  z-index: 10;
+  inset-inline-start: 0;
+  top: calc(100% + 0.25rem);
+  min-width: 14rem;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-s);
+  box-shadow: 0 6px 20px rgb(0 0 0 / 0.15);
+  padding: 0.25rem;
+}
+.menu-item {
+  font: inherit;
+  display: block;
+  width: 100%;
+  text-align: start;
+  background: none;
+  border: 0;
+  border-radius: var(--radius-s);
+  padding: 0.6rem 0.8rem;
+  min-height: 44px;
+  color: var(--ink);
+  cursor: pointer;
+}
+.menu-item:hover,
+.menu-item:focus-visible {
+  background: var(--track);
+}
+.menu-item.danger {
+  color: var(--danger);
+}

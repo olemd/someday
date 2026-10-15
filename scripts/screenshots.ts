@@ -302,7 +302,9 @@ try {
   await page.goto(`${O}/lists/${defaultList}?show=all`);
   await page.getByText('Visit the Munch museum').click();
   await page.getByRole('heading', { name: 'Visit the Munch museum' }).waitFor();
+  await page.getByText('More', { exact: true }).click();
   await shot(page, '04-idea');
+  await page.keyboard.press('Escape');
 
   // 4. Done on a shared list: who may see it.
   await page.goto(`${O}/lists/${shared.id}`);

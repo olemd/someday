@@ -4,6 +4,7 @@ import { useEffect, useState } from 'preact/hooks';
 import { get } from '../lib/api';
 import type { LogEntry } from '../../shared/schemas/items';
 import { confirmAction } from '../components/Dialog';
+import { MoreMenu } from '../components/MoreMenu';
 import { openDoneDialog } from '../components/DoneDialog';
 import { blankDraft, ItemForm, type ItemDraft } from '../components/ItemForm';
 import { toast } from '../components/Toast';
@@ -326,40 +327,38 @@ export function ItemScreen() {
             {t('item.reopen')}
           </button>
         )}
-        {canEdit && shared && item.status !== 'done' && (
-          <button type="button" class="btn plain" onClick={() => setStatus('done')}>
-            {t('item.doneForEveryone')}
-          </button>
-        )}
-        {canEdit && item.status !== 'archived' && (
-          <button type="button" class="btn plain" onClick={() => setStatus('archived')}>
-            {t('item.archive')}
-          </button>
-        )}
         {canEdit && (
           <button type="button" class="btn plain" onClick={() => setEditing(true)}>
             {t('common.edit')}
           </button>
         )}
         {canEdit && (
-          <button
-            type="button"
-            class="btn danger-plain"
-            onClick={async () => {
-              if (
-                !(await confirmAction(
-                  t('item.deleteConfirm', { title: item.title }),
-                  t('common.delete'),
-                  true,
-                ))
-              )
-                return;
-              await deleteItem(id);
-              navigate(`/lists/${item.list_id}`, true);
-            }}
-          >
-            {t('common.delete')}
-          </button>
+          <MoreMenu
+            actions={[
+              ...(shared && item.status !== 'done'
+                ? [{ label: t('item.doneForEveryone'), run: () => setStatus('done') }]
+                : []),
+              ...(item.status !== 'archived'
+                ? [{ label: t('item.archive'), run: () => setStatus('archived') }]
+                : []),
+              {
+                label: t('common.delete'),
+                danger: true,
+                run: async () => {
+                  if (
+                    !(await confirmAction(
+                      t('item.deleteConfirm', { title: item.title }),
+                      t('common.delete'),
+                      true,
+                    ))
+                  )
+                    return;
+                  await deleteItem(id);
+                  navigate(`/lists/${item.list_id}`, true);
+                },
+              },
+            ]}
+          />
         )}
       </div>
 

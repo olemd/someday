@@ -49,7 +49,8 @@
     "lastUsed": "Sist brukt {date}",
     "neverUsed": "Aldri brukt",
     "error": "Noe gikk galt: {message}",
-    "networkError": "Fikk ikke kontakt med serveren. Sjekk nettforbindelsen og prøv igjen."
+    "networkError": "Fikk ikke kontakt med serveren. Sjekk nettforbindelsen og prøv igjen.",
+    "more": "Mer"
   },
   "auth": {
     "setupTitle": "Sett opp Someday",
