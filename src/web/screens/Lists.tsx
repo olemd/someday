@@ -201,31 +201,30 @@ export function ItemRow({ item }: { item: Item }) {
 }
 
 /**
- * Moving one idea in the viewer's own order. Moves are relative to what is
- * shown (the filter may hide ideas in between), applied to the whole list.
+ * Put `item` at place `to` among the shown ideas (0 = first) in the viewer's
+ * own order. Moves are relative to what is shown (a filter may hide ideas in
+ * between) and applied to the whole list.
  */
+function moveItem(all: Item[], shown: Item[], listId: string, item: Item, to: number) {
+  const rest = all.filter((i) => i.id !== item.id);
+  const others = shown.filter((i) => i.id !== item.id);
+  const anchor = others[to];
+  const at = anchor ? rest.indexOf(anchor) : rest.indexOf(others[others.length - 1]!) + 1;
+  rest.splice(at, 0, item);
+  return orderList(
+    listId,
+    rest.map((i) => i.id),
+  );
+}
+
+/** The move buttons: the keyboard and single-tap way to reorder (WCAG 2.5.7). */
 function OrderControls(props: {
   item: Item;
   index: number;
-  shown: Item[];
-  all: Item[];
-  listId: string;
-  announce: (text: string) => void;
+  count: number;
+  move: (to: number) => void;
 }) {
-  const { item, index, shown } = props;
-  /** Put `item` at place `to` among the shown ideas (0 = first). */
-  const move = async (to: number) => {
-    const rest = props.all.filter((i) => i.id !== item.id);
-    const others = shown.filter((i) => i.id !== item.id);
-    const anchor = others[to];
-    const at = anchor ? rest.indexOf(anchor) : rest.indexOf(others[others.length - 1]!) + 1;
-    rest.splice(at, 0, item);
-    await orderList(
-      props.listId,
-      rest.map((i) => i.id),
-    );
-    props.announce(t('lists.moved', { title: item.title, pos: to + 1, total: shown.length }));
-  };
+  const { item, index, count, move } = props;
   return (
     <span class="order-controls">
       <button
@@ -249,13 +248,118 @@ function OrderControls(props: {
       <button
         type="button"
         class="btn plain small"
-        disabled={index === shown.length - 1}
+        disabled={index === count - 1}
         aria-label={t('lists.moveDown', { title: item.title })}
         onClick={() => move(index + 1)}
       >
         <span aria-hidden="true">↓</span>
       </button>
     </span>
+  );
+}
+
+interface Drag {
+  id: string;
+  from: number;
+  to: number;
+  /** Pointer movement since the drag started, in px. */
+  dy: number;
+  /** Height of the dragged row (how far the others make room). */
+  height: number;
+  /** Vertical midpoints of the rows when the drag started (page coordinates). */
+  mids: number[];
+  startY: number;
+}
+
+/**
+ * The list while changing the order: each row has the move buttons and a
+ * handle to drag with a mouse or a finger. While dragging, the row follows
+ * the pointer and the others make room; the order is saved on release.
+ */
+function OrderableList(props: {
+  shown: Item[];
+  all: Item[];
+  listId: string;
+  announce: (text: string) => void;
+}) {
+  const { shown } = props;
+  const [drag, setDrag] = useState<Drag | null>(null);
+  const move = async (item: Item, to: number) => {
+    await moveItem(props.all, shown, props.listId, item, to);
+    props.announce(t('lists.moved', { title: item.title, pos: to + 1, total: shown.length }));
+  };
+
+  const start = (e: PointerEvent, index: number) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    const handle = e.currentTarget as HTMLElement;
+    handle.setPointerCapture(e.pointerId);
+    const rows = [...(handle.closest('ul')?.children ?? [])] as HTMLElement[];
+    const rects = rows.map((r) => r.getBoundingClientRect());
+    setDrag({
+      id: shown[index]!.id,
+      from: index,
+      to: index,
+      dy: 0,
+      height: rects[index]!.height,
+      mids: rects.map((r) => r.top + scrollY + r.height / 2),
+      startY: e.pageY,
+    });
+  };
+  const follow = (e: PointerEvent) => {
+    if (!drag) return;
+    // The new place: how many of the other rows lie above the dragged row's middle.
+    const dy = e.pageY - drag.startY;
+    const middle = drag.mids[drag.from]! + dy;
+    const to = drag.mids.filter((m, i) => i !== drag.from && m < middle).length;
+    setDrag({ ...drag, dy, to });
+  };
+  const end = (cancel: boolean) => {
+    if (!drag) return;
+    setDrag(null);
+    if (!cancel && drag.to !== drag.from) void move(shown[drag.from]!, drag.to);
+  };
+
+  /** How far row `i` moves while another row is dragged over it. */
+  const shift = (i: number) => {
+    if (!drag || i === drag.from) return 0;
+    if (drag.from < i && i <= drag.to) return -drag.height;
+    if (drag.to <= i && i < drag.from) return drag.height;
+    return 0;
+  };
+
+  return (
+    <ul class={`plain items panel${drag ? ' dragging' : ''}`}>
+      {shown.map((i, index) => {
+        const dragged = drag?.id === i.id;
+        const y = dragged ? drag.dy : shift(index);
+        return (
+          <li
+            key={i.id}
+            class={`ordering${dragged ? ' lifted' : ''}`}
+            style={y ? { transform: `translateY(${y}px)` } : undefined}
+          >
+            <span
+              class="drag-handle"
+              aria-hidden="true"
+              onPointerDown={(e) => start(e, index)}
+              onPointerMove={follow}
+              onPointerUp={() => end(false)}
+              onPointerCancel={() => end(true)}
+            >
+              ⠿
+            </span>
+            <ItemRow item={i} />
+            <OrderControls
+              item={i}
+              index={index}
+              count={shown.length}
+              move={(to) => void move(i, to)}
+            />
+          </li>
+        );
+      })}
+    </ul>
   );
 }
 
@@ -418,21 +522,13 @@ export function ListScreen() {
       )}
       {shown.length === 0 ? (
         <p class="empty">{all.length ? t('lists.noMatch') : t('lists.empty')}</p>
+      ) : ordering ? (
+        <OrderableList shown={shown} all={all} listId={id} announce={setAnnouncement} />
       ) : (
         <ul class="plain items panel">
-          {shown.map((i, index) => (
-            <li key={i.id} class={ordering ? 'ordering' : undefined}>
+          {shown.map((i) => (
+            <li key={i.id}>
               <ItemRow item={i} />
-              {ordering && (
-                <OrderControls
-                  item={i}
-                  index={index}
-                  shown={shown}
-                  all={all}
-                  listId={id}
-                  announce={setAnnouncement}
-                />
-              )}
             </li>
           ))}
         </ul>

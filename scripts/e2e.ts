@@ -199,6 +199,22 @@ try {
     await page.getByRole('button', { name: 'Change order' }).click();
     await page.getByRole('button', { name: `Move “${last}” to the top` }).click();
     await page.getByText(`“${last}” is now number 1 of ${before.length}.`).waitFor();
+    if ((await titles())[0] !== last) throw new Error('order did not change');
+
+    // Drag the first idea down below the last one, by its handle.
+    const handle = page.locator('.items .drag-handle').first();
+    const target = page.locator('.items > li').last();
+    const from = (await handle.boundingBox())!;
+    const to = (await target.boundingBox())!;
+    await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(from.x + from.width / 2, to.y + to.height - 2, { steps: 12 });
+    await page.mouse.up();
+    await page.getByText(`“${last}” is now number ${before.length} of ${before.length}.`).waitFor();
+    const dragged = await titles();
+    if (dragged[dragged.length - 1] !== last) throw new Error(`drag did not move: ${dragged}`);
+    // Back to the top for the checks below.
+    await page.getByRole('button', { name: `Move “${last}” to the top` }).click();
     await page.getByRole('button', { name: 'Done', exact: true }).click();
     if ((await titles())[0] !== last) throw new Error('order did not change');
     await page.locator('.banner[role="status"]').waitFor({ state: 'detached' });

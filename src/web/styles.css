@@ -549,6 +549,40 @@ details > summary {
   flex: 1;
   min-width: 0;
 }
+/* Drag-and-drop: the handle starts a drag (no scrolling from it on touch). */
+.drag-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  flex-shrink: 0;
+  color: var(--muted);
+  font-size: 1.25rem;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+.items.dragging {
+  user-select: none;
+}
+.items.dragging .drag-handle {
+  cursor: grabbing;
+}
+.items.dragging > li:not(.lifted) {
+  transition: transform 0.15s ease;
+}
+.items > li.lifted {
+  position: relative;
+  z-index: 1;
+  background: var(--surface);
+  box-shadow: 0 6px 20px rgb(0 0 0 / 0.18);
+}
+@media (prefers-reduced-motion: reduce) {
+  .items.dragging > li:not(.lifted) {
+    transition: none;
+  }
+}
 .order-controls {
   display: flex;
   gap: 0.25rem;

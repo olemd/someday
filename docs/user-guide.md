@@ -49,7 +49,7 @@ Add ideas from the home screen or at the top of a list; **With details** opens t
 
 Use the tabs, search and tag filter to find things. Changes you make offline are kept on the device and sent when you are back online.
 
-**Change order** puts a list in the order you want, with buttons to move an idea up, down or to the top. The order is yours alone: on a shared list the others keep theirs. New ideas show at the top until you place them; **Reset order** goes back to newest first.
+**Change order** puts a list in the order you want: drag an idea by its handle (⠿), or use the buttons to move it up, down or to the top. The order is yours alone: on a shared list the others keep theirs. New ideas show at the top until you place them; **Reset order** goes back to newest first.
 
 A place links to a map (OpenStreetMap). Nothing is loaded from the map until you open the link.
 
