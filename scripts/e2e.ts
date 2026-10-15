@@ -73,8 +73,14 @@ try {
     await page.getByText('More details (optional)').click();
     await page.getByLabel('Where').selectOption('indoor');
     await page.getByLabel('Tags').fill('food, learn');
+    await page.getByLabel('Place').fill('Tromsø');
     await page.getByRole('button', { name: 'Add idea' }).click();
     await page.getByRole('heading', { name: 'Learn to make sourdough' }).waitFor();
+    // The place links to a map search.
+    const map = page.getByRole('link', { name: 'Tromsø on a map (OpenStreetMap)' });
+    const href = await map.getAttribute('href');
+    if (href !== 'https://www.openstreetmap.org/search?query=Troms%C3%B8')
+      throw new Error(`unexpected map link ${href}`);
   });
 
   await step('adds an idea from the home screen in one step', async () => {
@@ -154,7 +160,52 @@ try {
     await page.goto(`${ORIGIN}/lists`);
     await page.locator('.list-card', { hasText: 'Someday' }).click();
     await page.getByText('Idea from Bob').waitFor();
+
+    // Bob hearts one idea and hides another for himself.
+    await bob.getByRole('link', { name: 'Offline idea' }).click();
+    await bob.getByRole('button', { name: 'Heart' }).click();
+    await bob.locator('button[aria-pressed="true"]', { hasText: 'Heart' }).waitFor();
+    await bob.getByText('Hearts from Bob.').waitFor();
+    await bob.goBack();
+    // One of Kari's first two ideas was logged as done (a random suggestion): use the other.
+    await bob.getByText('Idea from Bob').waitFor();
+    const open = (await bob.getByRole('link', { name: 'See the northern lights' }).count())
+      ? 'See the northern lights'
+      : 'Learn to make sourdough';
+    await bob.getByRole('link', { name: open }).click();
+    await bob.getByText('More', { exact: true }).click();
+    await bob.getByRole('button', { name: 'Hide for me' }).click();
+    await bob.getByText(/^Hidden for you:/).waitFor();
+    await bob.goBack();
+    await bob.getByText('Idea from Bob').waitFor();
+    if (await bob.getByRole('link', { name: open }).count())
+      throw new Error('hidden idea still listed for Bob');
+    await bob.getByRole('link', { name: 'Hidden', exact: true }).click();
+    await bob.getByRole('link', { name: open }).waitFor();
+    await bob.locator('.banner[role="status"]').waitFor({ state: 'detached' });
+    await bob.waitForLoadState('networkidle');
+
+    // Kari sees the heart; the idea Bob hid is still on her list.
+    await page.reload();
+    await page.getByText('1 heart', { exact: true }).waitFor();
+    await page.getByRole('link', { name: open }).waitFor();
     await bobCtx.close();
+  });
+
+  await step('changes the order of a list, just for me', async () => {
+    const titles = () => page.locator('.items .item-title').allTextContents();
+    const before = await titles();
+    const last = before[before.length - 1]!;
+    await page.getByRole('button', { name: 'Change order' }).click();
+    await page.getByRole('button', { name: `Move “${last}” to the top` }).click();
+    await page.getByText(`“${last}” is now number 1 of ${before.length}.`).waitFor();
+    await page.getByRole('button', { name: 'Done', exact: true }).click();
+    if ((await titles())[0] !== last) throw new Error('order did not change');
+    await page.locator('.banner[role="status"]').waitFor({ state: 'detached' });
+    await page.waitForLoadState('networkidle');
+    await page.reload();
+    await page.locator('.items .item-title').first().waitFor();
+    if ((await titles())[0] !== last) throw new Error('order was not kept');
   });
 
   await step('downloads the data export', async () => {

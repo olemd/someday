@@ -539,6 +539,26 @@ details > summary {
   text-decoration: none;
   min-height: 44px;
 }
+/* Changing the order: the move buttons sit to the right of each row. */
+.items > li.ordering {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.items > li.ordering .item-row {
+  flex: 1;
+  min-width: 0;
+}
+.order-controls {
+  display: flex;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+.order-controls .btn {
+  min-width: 44px;
+  min-height: 44px;
+  justify-content: center;
+}
 .item-row:hover .item-title {
   text-decoration: underline;
 }

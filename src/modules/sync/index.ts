@@ -28,6 +28,8 @@ const OpSchema = z.discriminatedUnion('kind', [
     until: z.iso.datetime().nullable(),
   }),
   z.object({ op_id: OpId, kind: z.literal('item.seen'), id: Id, at: z.number() }),
+  z.object({ op_id: OpId, kind: z.literal('item.hide'), id: Id, hidden: z.boolean() }),
+  z.object({ op_id: OpId, kind: z.literal('item.heart'), id: Id, on: z.boolean() }),
   z.object({
     op_id: OpId,
     kind: z.literal('log.create'),
@@ -62,6 +64,7 @@ const OpSchema = z.discriminatedUnion('kind', [
     id: Id,
     name: z.string().trim().min(1).max(100),
   }),
+  z.object({ op_id: OpId, kind: z.literal('list.order'), id: Id, ids: z.array(Id).max(5000) }),
   z.object({
     op_id: OpId,
     kind: z.literal('list.membership'),

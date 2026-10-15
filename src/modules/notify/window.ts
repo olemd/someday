@@ -33,6 +33,7 @@ export async function windowEvents(ctx: Ctx, userId: string, today: string): Pro
   const soon = addDays(today, WARN_DAYS);
   const out: Event[] = [];
   for (const i of items) {
+    if (i.hidden_at) continue; // hidden for this user
     if (i.valid_from === today) out.push({ id: i.id, title: i.title, kind: 'opens' });
     else if (seasonStartsOn(i.months, today))
       out.push({ id: i.id, title: i.title, kind: 'seasonStarts' });

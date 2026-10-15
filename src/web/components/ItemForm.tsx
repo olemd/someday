@@ -33,6 +33,10 @@ export type ItemDraft = Omit<
   | 'my_last_done_on'
   | 'snoozed_until'
   | 'last_suggested_at'
+  | 'position'
+  | 'hidden_at'
+  | 'hearted_by'
+  | 'hearted_by_me'
   | 'done_count'
   | 'done_by'
 >;

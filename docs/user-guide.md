@@ -49,6 +49,10 @@ Add ideas from the home screen or at the top of a list; **With details** opens t
 
 Use the tabs, search and tag filter to find things. Changes you make offline are kept on the device and sent when you are back online.
 
+**Change order** puts a list in the order you want, with buttons to move an idea up, down or to the top. The order is yours alone: on a shared list the others keep theirs. New ideas show at the top until you place them; **Reset order** goes back to newest first.
+
+A place links to a map (OpenStreetMap). Nothing is loaded from the map until you open the link.
+
 ## Done, and who sees it
 
 ![An idea with your log entry](screenshots/04-idea.png)
@@ -66,6 +70,11 @@ Use the tabs, search and tag filter to find things. Changes you make offline are
 ## Sharing a list
 
 ![List settings with members and an invite link](screenshots/06-sharing.png)
+
+On a shared list:
+
+- **Heart** an idea to say you would like it too. Everyone on the list sees who hearted it; the list shows the number of hearts.
+- **More → Hide for me** takes an idea out of your list and your suggestions without touching it for the others (the **Hidden** tab brings it back). Viewers can do this too.
 
 In **List settings**, create an invite link (with a QR code) and choose whether people may edit or only view. Someone without an account can create one right from the link. The owner changes roles, removes members, hands the list over, and decides from how many members anonymous counts are shown. Members can leave. Deleted lists can be restored for 30 days.
 

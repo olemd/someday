@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 /** One idea: details, edit, status, "done" log with undo (§3.2, §3.3). */
+import type { ComponentChildren } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
 import { get } from '../lib/api';
-import type { LogEntry } from '../../shared/schemas/items';
+import type { Item, LogEntry } from '../../shared/schemas/items';
 import { confirmAction } from '../components/Dialog';
 import { MoreMenu } from '../components/MoreMenu';
 import { openDoneDialog } from '../components/DoneDialog';
@@ -11,6 +12,8 @@ import { toast } from '../components/Toast';
 import {
   deleteItem,
   deleteLogEntry,
+  heartItem,
+  hideItem,
   items,
   listById,
   lists,
@@ -34,6 +37,17 @@ import {
 } from '../lib/labels';
 import { Markdown } from '../lib/markdown';
 import { navigate, query, route } from '../lib/router';
+
+/**
+ * OpenStreetMap for a place: the point when it has coordinates, otherwise a
+ * search for its name. A plain link, so nothing is loaded until it is opened.
+ */
+export function mapUrl(loc: NonNullable<Item['location']>): string {
+  if (loc.lat !== undefined && loc.lon !== undefined) {
+    return `https://www.openstreetmap.org/?mlat=${loc.lat}&mlon=${loc.lon}#map=15/${loc.lat}/${loc.lon}`;
+  }
+  return `https://www.openstreetmap.org/search?query=${encodeURIComponent(loc.label)}`;
+}
 
 /** Fields of a draft that differ from the stored item (only those are sent). */
 function diff(before: ItemDraft, after: ItemDraft): Record<string, unknown> {
@@ -236,7 +250,7 @@ export function ItemScreen() {
     await saveItem(id, { status });
   };
 
-  const details: [string, string][] = [];
+  const details: [string, ComponentChildren][] = [];
   if (item.duration) details.push([t('item.duration'), durationLabel(item.duration)]);
   if (item.setting) details.push([t('item.setting'), settingLabel(item.setting)]);
   if (item.cost !== null) details.push([t('item.cost'), costLabel(item.cost)]);
@@ -254,7 +268,15 @@ export function ItemScreen() {
     ]);
   }
   if (item.months) details.push([t('item.months'), monthsLabel(item.months)]);
-  if (item.location) details.push([t('item.location'), item.location.label]);
+  if (item.location) {
+    details.push([
+      t('item.location'),
+      <a href={mapUrl(item.location)} rel="noopener noreferrer" target="_blank">
+        {item.location.label}
+        <span class="visually-hidden"> {t('item.onMap')}</span>
+      </a>,
+    ]);
+  }
   const snoozed = item.snoozed_until && Date.parse(item.snoozed_until) > Date.now();
 
   return (
@@ -303,6 +325,9 @@ export function ItemScreen() {
           {item.done_by.length > 0 && ` ${t('item.doneBy', { names: item.done_by.join(', ') })}`}
         </p>
       )}
+      {shared && item.hearted_by.length > 0 && (
+        <p class="muted">{t('item.heartedBy', { names: item.hearted_by.join(', ') })}</p>
+      )}
       {item.repeatable && <p class="muted small">{t('item.repeatableNote')}</p>}
       {snoozed && (
         <p class="notice">
@@ -313,10 +338,29 @@ export function ItemScreen() {
         </p>
       )}
 
+      {item.hidden_at && (
+        <p class="notice">
+          {t('item.hiddenNotice')}{' '}
+          <button type="button" class="btn plain small" onClick={() => hideItem(id, false)}>
+            {t('item.unhide')}
+          </button>
+        </p>
+      )}
+
       <div class="actions start">
         <button type="button" class="btn primary" onClick={() => openDoneDialog(item)}>
           {t('item.markDone')}
         </button>
+        {shared && (
+          <button
+            type="button"
+            class="btn plain"
+            aria-pressed={item.hearted_by_me}
+            onClick={() => heartItem(id, !item.hearted_by_me)}
+          >
+            <span aria-hidden="true">{item.hearted_by_me ? '♥' : '♡'}</span> {t('item.heart')}
+          </button>
+        )}
         {canEdit && item.status === 'idea' && (
           <button type="button" class="btn plain" onClick={() => setStatus('planned')}>
             {t('suggest.letsDoIt')}
@@ -332,31 +376,47 @@ export function ItemScreen() {
             {t('common.edit')}
           </button>
         )}
-        {canEdit && (
+        {(canEdit || shared) && (
           <MoreMenu
             actions={[
-              ...(shared && item.status !== 'done'
+              // Personal, so viewers may use it too; only useful where others are.
+              ...(shared && !item.hidden_at
+                ? [
+                    {
+                      label: t('item.hideForMe'),
+                      run: async () => {
+                        await hideItem(id, true);
+                        toast(t('item.hiddenToast'));
+                      },
+                    },
+                  ]
+                : []),
+              ...(canEdit && shared && item.status !== 'done'
                 ? [{ label: t('item.doneForEveryone'), run: () => setStatus('done') }]
                 : []),
-              ...(item.status !== 'archived'
+              ...(canEdit && item.status !== 'archived'
                 ? [{ label: t('item.archive'), run: () => setStatus('archived') }]
                 : []),
-              {
-                label: t('common.delete'),
-                danger: true,
-                run: async () => {
-                  if (
-                    !(await confirmAction(
-                      t('item.deleteConfirm', { title: item.title }),
-                      t('common.delete'),
-                      true,
-                    ))
-                  )
-                    return;
-                  await deleteItem(id);
-                  navigate(`/lists/${item.list_id}`, true);
-                },
-              },
+              ...(canEdit
+                ? [
+                    {
+                      label: t('common.delete'),
+                      danger: true,
+                      run: async () => {
+                        if (
+                          !(await confirmAction(
+                            t('item.deleteConfirm', { title: item.title }),
+                            t('common.delete'),
+                            true,
+                          ))
+                        )
+                          return;
+                        await deleteItem(id);
+                        navigate(`/lists/${item.list_id}`, true);
+                      },
+                    },
+                  ]
+                : []),
             ]}
           />
         )}

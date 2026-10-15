@@ -54,6 +54,10 @@ interface ItemRow {
   tags: string;
   snoozed_until: string | null;
   last_suggested_at: string | null;
+  position: number | null;
+  hidden_at: string | null;
+  hearted_by: string;
+  hearted_by_me: number;
   my_last_done_on: string | null;
   anon_done: number;
   done_by: string;
@@ -67,7 +71,11 @@ const ITEM_SELECT = `
          i.cost, i.energy, i.social, i.valid_from, i.valid_to, i.months, i.links, i.location,
          i.created_by, i.created_at, i.updated_at, i.field_clock,
          (SELECT json_group_array(tag) FROM (SELECT tag FROM item_tags WHERE item_id = i.id ORDER BY tag)) AS tags,
-         ss.snoozed_until, ss.last_suggested_at,
+         ss.snoozed_until, ss.last_suggested_at, ss.position, ss.hidden_at,
+         (SELECT json_group_array(name) FROM (
+            SELECT u.display_name AS name FROM item_hearts ht JOIN users u ON u.id = ht.user_id
+             WHERE ht.item_id = i.id ORDER BY ht.created_at, ht.rowid)) AS hearted_by,
+         EXISTS (SELECT 1 FROM item_hearts WHERE item_id = i.id AND user_id = ?1) AS hearted_by_me,
          (SELECT MAX(done_on) FROM item_log WHERE item_id = i.id AND user_id = ?1) AS my_last_done_on,
          (SELECT COUNT(DISTINCT user_id) FROM item_log
            WHERE item_id = i.id AND visibility IN ('anonymous', 'shared')) AS anon_done,
@@ -109,6 +117,10 @@ function toItem(ctx: Ctx, r: ItemRow): Item {
     my_last_done_on: r.my_last_done_on,
     snoozed_until: r.snoozed_until,
     last_suggested_at: r.last_suggested_at,
+    position: r.position,
+    hidden_at: r.hidden_at,
+    hearted_by: JSON.parse(r.hearted_by) as string[],
+    hearted_by_me: r.hearted_by_me === 1,
     // Below the group-size threshold the count would identify people (§3.3).
     done_count: r.member_count >= threshold ? r.anon_done : null,
     done_by: r.member_count > 1 ? (JSON.parse(r.done_by) as string[]) : [],
@@ -446,13 +458,24 @@ export async function writeItem(
   }
 }
 
-// ── Personal suggestion state (§4.1 actions) ───────────────────────────
+// ── Personal state: "not now", hidden, own order (§4.1 actions) ────────
+
+/**
+ * Change rows for personal state and hearts have no actor: they only tell
+ * devices to re-sync the item, and the idea's history (who *changed* it)
+ * leaves them out.
+ */
+const SYNC_ONLY = null;
 
 export async function setSuggestionState(
   ctx: Ctx,
   access: Access,
   itemId: string,
-  patch: { snoozed_until?: string | null; last_suggested_at?: string | null },
+  patch: {
+    snoozed_until?: string | null;
+    last_suggested_at?: string | null;
+    hidden_at?: string | null;
+  },
 ): Promise<void> {
   const item = await getItem(ctx, access, itemId);
   const cols = Object.keys(patch) as (keyof typeof patch)[];
@@ -470,8 +493,94 @@ export async function setSuggestionState(
       entityId: itemId,
       listId: item.list_id,
       op: 'upsert',
-      actor: { id: access.userId, kind: 'user' },
+      actor: SYNC_ONLY,
       visibleTo: access.userId,
+    }),
+  ]);
+}
+
+/**
+ * The viewer's own order for a list: `ids` first to last. Ideas of the list
+ * not in `ids` lose their place (they show first again, newest first), so an
+ * empty `ids` resets the order. IDs from other lists are ignored.
+ */
+export async function setOrder(
+  ctx: Ctx,
+  access: Access,
+  listId: string,
+  ids: string[],
+): Promise<void> {
+  await requireListRole(ctx, access, listId, 'viewer');
+  const inList = new Set(
+    (await ctx.db.all<{ id: string }>('SELECT id FROM items WHERE list_id = ?', listId)).map(
+      (r) => r.id,
+    ),
+  );
+  const placed = [...new Set(ids)].filter((id) => inList.has(id));
+  const at = new Map(placed.map((id, i) => [id, i]));
+  const touched = (
+    await ctx.db.all<{ item_id: string }>(
+      `SELECT ss.item_id FROM suggestion_state ss JOIN items i ON i.id = ss.item_id
+        WHERE ss.user_id = ? AND i.list_id = ? AND ss.position IS NOT NULL`,
+      access.userId,
+      listId,
+    )
+  )
+    .map((r) => r.item_id)
+    .filter((id) => !at.has(id));
+  const stmts: Stmt[] = [
+    {
+      sql: `UPDATE suggestion_state SET position = NULL
+             WHERE user_id = ? AND item_id IN (SELECT id FROM items WHERE list_id = ?)`,
+      params: [access.userId, listId],
+    },
+  ];
+  for (const [id, pos] of at) {
+    stmts.push({
+      sql: `INSERT INTO suggestion_state (user_id, item_id, position) VALUES (?, ?, ?)
+            ON CONFLICT(user_id, item_id) DO UPDATE SET position = excluded.position`,
+      params: [access.userId, id, pos],
+    });
+  }
+  for (const id of [...at.keys(), ...touched]) {
+    stmts.push(
+      changeStmt(ctx, {
+        entity: 'item',
+        entityId: id,
+        listId,
+        op: 'upsert',
+        actor: SYNC_ONLY,
+        visibleTo: access.userId,
+      }),
+    );
+  }
+  await ctx.db.batch(stmts);
+}
+
+/** Heart an idea (or take the heart back). Every member of the list sees who did. */
+export async function setHeart(
+  ctx: Ctx,
+  access: Access,
+  itemId: string,
+  on: boolean,
+): Promise<void> {
+  const item = await getItem(ctx, access, itemId);
+  await ctx.db.batch([
+    on
+      ? {
+          sql: 'INSERT OR IGNORE INTO item_hearts (item_id, user_id, created_at) VALUES (?, ?, ?)',
+          params: [itemId, access.userId, iso(ctx.clock.now())],
+        }
+      : {
+          sql: 'DELETE FROM item_hearts WHERE item_id = ? AND user_id = ?',
+          params: [itemId, access.userId],
+        },
+    changeStmt(ctx, {
+      entity: 'item',
+      entityId: itemId,
+      listId: item.list_id,
+      op: 'upsert',
+      actor: SYNC_ONLY,
     }),
   ]);
 }

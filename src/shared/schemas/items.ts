@@ -87,6 +87,13 @@ export interface Item extends Omit<ItemFields, 'tags'> {
   my_last_done_on: string | null;
   snoozed_until: string | null;
   last_suggested_at: string | null;
+  /** The viewer's own place for the idea in its list (lower first); null = not placed. */
+  position: number | null;
+  /** When the viewer hid the idea for themselves; it stays for everyone else. */
+  hidden_at: string | null;
+  /** Names of the members who hearted the idea, first heart first. */
+  hearted_by: string[];
+  hearted_by_me: boolean;
   /** Distinct members with an anonymous or shared entry; null below the group-size threshold. */
   done_count: number | null;
   /** Names of members with a shared entry. */

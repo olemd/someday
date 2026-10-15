@@ -143,6 +143,7 @@ function itemRoutes(app: Router) {
            LEFT JOIN users u ON u.id = ch.actor_user
            LEFT JOIN oauth_clients oc ON ch.actor_kind = 'oauth' AND oc.client_id = ch.actor
           WHERE ch.entity = 'item' AND ch.entity_id = ? AND (ch.visible_to IS NULL OR ch.visible_to = ?)
+            AND ch.actor IS NOT NULL
           ORDER BY ch.seq DESC LIMIT 50`,
         id,
         access.userId,

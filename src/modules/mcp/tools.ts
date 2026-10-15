@@ -90,6 +90,8 @@ export function compactItem(i: Item) {
   if (i.done_by.length) out.done_by = i.done_by;
   if (i.snoozed_until && Date.parse(i.snoozed_until) > Date.now())
     out.snoozed_until = i.snoozed_until;
+  if (i.hidden_at) out.hidden_for_me = true;
+  if (i.hearted_by.length) out.hearted_by = i.hearted_by;
   return out;
 }
 

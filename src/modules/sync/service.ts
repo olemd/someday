@@ -16,7 +16,7 @@ import { iso } from '../../core/ports';
 import type { Item, List, LogEntry } from '../../shared/schemas/items';
 import type { Actor } from '../data/changes';
 import { deleteLog, logDone, updateLog, visibleLogEntries } from '../items/log';
-import { queryItems, setSuggestionState, writeItem } from '../items/service';
+import { queryItems, setHeart, setOrder, setSuggestionState, writeItem } from '../items/service';
 import type { Access } from '../lists/access';
 import { createList, getLists, updateList, updateMembership } from '../lists/service';
 import type { Ctx } from '../types';
@@ -190,6 +190,8 @@ export type Op =
   | { op_id: string; kind: 'item.delete'; id: string }
   | { op_id: string; kind: 'item.snooze'; id: string; until: string | null }
   | { op_id: string; kind: 'item.seen'; id: string; at: number }
+  | { op_id: string; kind: 'item.hide'; id: string; hidden: boolean }
+  | { op_id: string; kind: 'item.heart'; id: string; on: boolean }
   | {
       op_id: string;
       kind: 'log.create';
@@ -214,6 +216,7 @@ export type Op =
   | { op_id: string; kind: 'log.delete'; id: string }
   | { op_id: string; kind: 'list.create'; id: string; name: string }
   | { op_id: string; kind: 'list.update'; id: string; name: string }
+  | { op_id: string; kind: 'list.order'; id: string; ids: string[] }
   | {
       op_id: string;
       kind: 'list.membership';
@@ -255,6 +258,12 @@ async function applyOp(ctx: Ctx, access: Access, actor: Actor, op: Op): Promise<
         last_suggested_at: iso(Math.min(op.at, now)),
       });
       break;
+    case 'item.hide':
+      await setSuggestionState(ctx, access, op.id, { hidden_at: op.hidden ? iso(now) : null });
+      break;
+    case 'item.heart':
+      await setHeart(ctx, access, op.id, op.on);
+      break;
     case 'log.create':
       await logDone(ctx, access, actor, op.item_id, {
         id: op.id,
@@ -280,6 +289,9 @@ async function applyOp(ctx: Ctx, access: Access, actor: Actor, op: Op): Promise<
       break;
     case 'list.update':
       await updateList(ctx, access, actor, op.id, { name: op.name });
+      break;
+    case 'list.order':
+      await setOrder(ctx, access, op.id, op.ids);
       break;
     case 'list.membership':
       await updateMembership(ctx, access, op.id, {

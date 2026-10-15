@@ -84,7 +84,7 @@ describe('windows and seasons', () => {
 });
 
 describe('eligibility', () => {
-  it('excludes archived, done-for-me, snoozed, out-of-window and excluded items', () => {
+  it('excludes archived, done-for-me, snoozed, hidden, out-of-window and excluded items', () => {
     const c = ctx([]);
     expect(eligible(item({ status: 'archived' }), c)).toBeNull();
     expect(eligible(item({ status: 'done' }), c)).toBeNull();
@@ -92,6 +92,7 @@ describe('eligibility', () => {
     expect(eligible(item({ done_for_me: true, repeatable: true }), c)).toEqual([]);
     expect(eligible(item({ snoozed_until: '2026-10-20T00:00:00.000Z' }), c)).toBeNull();
     expect(eligible(item({ snoozed_until: '2026-10-01T00:00:00.000Z' }), c)).toEqual([]);
+    expect(eligible(item({ hidden_at: '2026-10-01T00:00:00.000Z' }), c)).toBeNull();
     expect(eligible(item({ months: 1 }), c)).toBeNull();
     expect(eligible(item(), { ...c, exclude: ['a'] })).toBeNull();
   });

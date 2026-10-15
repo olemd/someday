@@ -394,7 +394,17 @@
     "someone": "Noen",
     "via": "via {app}",
     "historyUnavailable": "Historikken vises når du er på nett og ideen er lagret.",
-    "moreDetails": "Flere detaljer (valgfritt)"
+    "moreDetails": "Flere detaljer (valgfritt)",
+    "hideForMe": "Skjul for meg",
+    "hidden": "Skjult",
+    "hiddenToast": "Skjult for deg. De andre på listen ser den fortsatt.",
+    "hiddenNotice": "Skjult for deg: den vises ikke i listene eller forslagene dine. De andre på listen ser den fortsatt.",
+    "unhide": "Vis igjen",
+    "heart": "Hjerte",
+    "heartedBy": "Hjerter fra {names}.",
+    "hearts_one": "{count} hjerte",
+    "hearts_other": "{count} hjerter",
+    "onMap": "på kart (OpenStreetMap)"
   },
   "lists": {
     "title": "Lister",
@@ -425,7 +435,17 @@
     "empty": "Ingen ideer på denne listen ennå.",
     "deletedTitle": "Nylig slettet",
     "restore": "Gjenopprett",
-    "restored": "Listen er gjenopprettet"
+    "restored": "Listen er gjenopprettet",
+    "show_hidden": "Skjult",
+    "reorder": "Endre rekkefølge",
+    "reorderDone": "Ferdig",
+    "resetOrder": "Tilbakestill rekkefølgen",
+    "orderHint": "Rekkefølgen er bare din; de andre på listen beholder sin.",
+    "moveUp": "Flytt «{title}» opp",
+    "moveDown": "Flytt «{title}» ned",
+    "moveTop": "Flytt «{title}» øverst",
+    "moved": "«{title}» er nå nummer {pos} av {total}.",
+    "orderReset": "Rekkefølgen er tilbakestilt."
   },
   "listSettings": {
     "title": "Innstillinger for {name}",

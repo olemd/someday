@@ -26,6 +26,8 @@ export type Op =
   | { kind: 'item.delete'; id: string }
   | { kind: 'item.snooze'; id: string; until: string | null }
   | { kind: 'item.seen'; id: string; at: number }
+  | { kind: 'item.hide'; id: string; hidden: boolean }
+  | { kind: 'item.heart'; id: string; on: boolean }
   | {
       kind: 'log.create';
       id: string;
@@ -43,6 +45,7 @@ export type Op =
   | { kind: 'log.delete'; id: string }
   | { kind: 'list.create'; id: string; name: string }
   | { kind: 'list.update'; id: string; name: string }
+  | { kind: 'list.order'; id: string; ids: string[] }
   | {
       kind: 'list.membership';
       id: string;
@@ -205,6 +208,10 @@ function emptyItem(id: string, now: string): Item {
     my_last_done_on: null,
     snoozed_until: null,
     last_suggested_at: null,
+    position: null,
+    hidden_at: null,
+    hearted_by: [],
+    hearted_by_me: false,
     done_count: null,
     done_by: [],
   };
@@ -232,6 +239,29 @@ async function applyLocal(op: Op): Promise<void> {
             ? { ...cur, snoozed_until: op.until }
             : { ...cur, last_suggested_at: new Date(op.at).toISOString() },
         ],
+      });
+    }
+    case 'item.hide': {
+      const cur = items.value.get(op.id);
+      if (!cur) return;
+      return save({ items: [{ ...cur, hidden_at: op.hidden ? now : null }] });
+    }
+    case 'item.heart': {
+      const cur = items.value.get(op.id);
+      if (!cur || cur.hearted_by_me === op.on) return;
+      // Names are what the server sends; drop (or add) one copy of mine.
+      const name = auth.value?.user?.display_name ?? '';
+      const by = [...cur.hearted_by];
+      if (op.on) by.push(name);
+      else if (by.lastIndexOf(name) >= 0) by.splice(by.lastIndexOf(name), 1);
+      return save({ items: [{ ...cur, hearted_by_me: op.on, hearted_by: by }] });
+    }
+    case 'list.order': {
+      const at = new Map(op.ids.map((id, i) => [id, i]));
+      return save({
+        items: itemList.value
+          .filter((i) => i.list_id === op.id)
+          .map((i) => ({ ...i, position: at.get(i.id) ?? null })),
       });
     }
     case 'log.create': {
@@ -512,6 +542,11 @@ export const deleteItem = (id: string) => enqueue({ kind: 'item.delete', id });
 export const snoozeItem = (id: string, until: string | null) =>
   enqueue({ kind: 'item.snooze', id, until });
 export const markSeen = (id: string) => enqueue({ kind: 'item.seen', id, at: Date.now() });
+export const hideItem = (id: string, hidden: boolean) => enqueue({ kind: 'item.hide', id, hidden });
+export const heartItem = (id: string, on: boolean) => enqueue({ kind: 'item.heart', id, on });
+/** The viewer's own order for a list, first to last; [] resets it. */
+export const orderList = (listId: string, ids: string[]) =>
+  enqueue({ kind: 'list.order', id: listId, ids });
 
 export function logDone(
   itemId: string,

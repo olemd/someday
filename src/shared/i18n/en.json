@@ -394,7 +394,17 @@
     "someone": "Someone",
     "via": "via {app}",
     "historyUnavailable": "History is shown when you are online and the idea has been saved.",
-    "moreDetails": "More details (optional)"
+    "moreDetails": "More details (optional)",
+    "hideForMe": "Hide for me",
+    "hidden": "Hidden",
+    "hiddenToast": "Hidden for you. The others on the list still see it.",
+    "hiddenNotice": "Hidden for you: it is left out of your lists and suggestions. The others on the list still see it.",
+    "unhide": "Show again",
+    "heart": "Heart",
+    "heartedBy": "Hearts from {names}.",
+    "hearts_one": "{count} heart",
+    "hearts_other": "{count} hearts",
+    "onMap": "on a map (OpenStreetMap)"
   },
   "lists": {
     "title": "Lists",
@@ -425,7 +435,17 @@
     "empty": "No ideas on this list yet.",
     "deletedTitle": "Recently deleted",
     "restore": "Restore",
-    "restored": "List restored"
+    "restored": "List restored",
+    "show_hidden": "Hidden",
+    "reorder": "Change order",
+    "reorderDone": "Done",
+    "resetOrder": "Reset order",
+    "orderHint": "The order is yours alone; the others on the list keep theirs.",
+    "moveUp": "Move “{title}” up",
+    "moveDown": "Move “{title}” down",
+    "moveTop": "Move “{title}” to the top",
+    "moved": "“{title}” is now number {pos} of {total}.",
+    "orderReset": "Order reset."
   },
   "listSettings": {
     "title": "Settings for {name}",

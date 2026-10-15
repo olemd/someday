@@ -32,6 +32,8 @@ export interface SuggestItem {
   my_last_done_on: string | null;
   snoozed_until: string | null;
   last_suggested_at: string | null;
+  /** Hidden by the viewer ("not for me"): never suggested. */
+  hidden_at?: string | null;
 }
 
 export interface SuggestFilters {
@@ -177,6 +179,7 @@ export function eligible(item: SuggestItem, ctx: SuggestContext): string[] | nul
   if (item.status !== 'idea' && item.status !== 'planned') return null;
   if (!item.repeatable && item.done_for_me) return null;
   if (item.snoozed_until && Date.parse(item.snoozed_until) > ctx.now) return null;
+  if (item.hidden_at) return null;
   if (!inWindow(item, ctx.today)) return null;
   if (ctx.exclude?.includes(item.id)) return null;
   return matchFilters(item, ctx.filters);

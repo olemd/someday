@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'preact/hooks';
 import type { Item } from '../../shared/schemas/items';
 import { showError, toast } from '../components/Toast';
 import { get, post } from '../lib/api';
-import { createList, itemList, lists, newId, ready, saveItem, sync } from '../lib/data';
+import { createList, itemList, lists, newId, orderList, ready, saveItem, sync } from '../lib/data';
 import { calendarDate } from '../lib/fmt';
 import { t } from '../lib/i18n';
 import { durationLabel, monthsLabel, statusLabel } from '../lib/labels';
@@ -51,7 +51,7 @@ export function ListsScreen() {
   const counts = useMemo(() => {
     const m = new Map<string, number>();
     for (const i of itemList.value) {
-      if (i.status === 'idea' || i.status === 'planned')
+      if ((i.status === 'idea' || i.status === 'planned') && !i.hidden_at)
         m.set(i.list_id, (m.get(i.list_id) ?? 0) + 1);
     }
     return m;
@@ -115,9 +115,13 @@ export function ListsScreen() {
   );
 }
 
-type Filter = 'open' | 'planned' | 'done' | 'archived' | 'all';
+type Filter = 'open' | 'planned' | 'done' | 'archived' | 'all' | 'hidden';
 
 function matches(i: Item, filter: Filter, q: string, tag: string | null): boolean {
+  // Hidden for me: only under "Hidden" and "All".
+  if (filter === 'hidden') {
+    if (!i.hidden_at) return false;
+  } else if (filter !== 'all' && i.hidden_at) return false;
   if (filter === 'open' && !(i.status === 'idea' || i.status === 'planned')) return false;
   if (filter === 'open' && !i.repeatable && i.done_for_me) return false;
   if (filter === 'planned' && i.status !== 'planned') return false;
@@ -137,35 +141,121 @@ function matches(i: Item, filter: Filter, q: string, tag: string | null): boolea
   return true;
 }
 
+/** Default order: planned first, then newest first. */
+function byDefault(a: Item, b: Item): number {
+  const rank = (i: Item) => (i.status === 'planned' ? 0 : 1);
+  return rank(a) - rank(b) || b.created_at.localeCompare(a.created_at);
+}
+
 /**
- * One idea in a list: the title and at most two short facts (state, and one
- * hint of when or how long). Everything else is on the idea's own page.
+ * The viewer's own order: ideas they have not placed yet come first (so a new
+ * idea shows at the top), in the default order; then the placed ones.
+ */
+export function byPosition(a: Item, b: Item): number {
+  if (a.position === null && b.position === null) return byDefault(a, b);
+  if (a.position === null) return -1;
+  if (b.position === null) return 1;
+  return a.position - b.position;
+}
+
+/**
+ * One idea in a list: the title and at most two short facts (state, hearts,
+ * and one hint of when or how long, in that priority). Everything else is on
+ * the idea's own page.
  */
 export function ItemRow({ item }: { item: Item }) {
   const doneForMe = item.done_for_me && item.status !== 'done';
   const hint = item.duration ? durationLabel(item.duration) : monthsLabel(item.months);
+  const facts = [
+    item.hidden_at ? (
+      <span class="badge">{t('item.hidden')}</span>
+    ) : item.status !== 'idea' ? (
+      <span class={`badge status-${item.status}`}>{statusLabel(item.status)}</span>
+    ) : (
+      doneForMe && (
+        <span class="badge status-done">
+          {item.my_last_done_on
+            ? t('item.doneOn', { date: calendarDate(item.my_last_done_on) })
+            : t('item.doneForMe')}
+        </span>
+      )
+    ),
+    item.hearted_by.length > 0 && (
+      <span>
+        <span aria-hidden="true">♥ {item.hearted_by.length}</span>
+        <span class="visually-hidden">{t('item.hearts', { count: item.hearted_by.length })}</span>
+      </span>
+    ),
+    hint && <span>{hint}</span>,
+  ]
+    .filter(Boolean)
+    .slice(0, 2);
   return (
     <a class="item-row" href={`/items/${item.id}`}>
       <span class="stack tight grow">
         <span class="item-title">{item.title}</span>
-        {(item.status !== 'idea' || doneForMe || hint) && (
-          <span class="meta">
-            {item.status !== 'idea' ? (
-              <span class={`badge status-${item.status}`}>{statusLabel(item.status)}</span>
-            ) : (
-              doneForMe && (
-                <span class="badge status-done">
-                  {item.my_last_done_on
-                    ? t('item.doneOn', { date: calendarDate(item.my_last_done_on) })
-                    : t('item.doneForMe')}
-                </span>
-              )
-            )}
-            {hint && <span>{hint}</span>}
-          </span>
-        )}
+        {facts.length > 0 && <span class="meta">{facts}</span>}
       </span>
     </a>
+  );
+}
+
+/**
+ * Moving one idea in the viewer's own order. Moves are relative to what is
+ * shown (the filter may hide ideas in between), applied to the whole list.
+ */
+function OrderControls(props: {
+  item: Item;
+  index: number;
+  shown: Item[];
+  all: Item[];
+  listId: string;
+  announce: (text: string) => void;
+}) {
+  const { item, index, shown } = props;
+  /** Put `item` at place `to` among the shown ideas (0 = first). */
+  const move = async (to: number) => {
+    const rest = props.all.filter((i) => i.id !== item.id);
+    const others = shown.filter((i) => i.id !== item.id);
+    const anchor = others[to];
+    const at = anchor ? rest.indexOf(anchor) : rest.indexOf(others[others.length - 1]!) + 1;
+    rest.splice(at, 0, item);
+    await orderList(
+      props.listId,
+      rest.map((i) => i.id),
+    );
+    props.announce(t('lists.moved', { title: item.title, pos: to + 1, total: shown.length }));
+  };
+  return (
+    <span class="order-controls">
+      <button
+        type="button"
+        class="btn plain small"
+        disabled={index === 0}
+        aria-label={t('lists.moveTop', { title: item.title })}
+        onClick={() => move(0)}
+      >
+        <span aria-hidden="true">⤒</span>
+      </button>
+      <button
+        type="button"
+        class="btn plain small"
+        disabled={index === 0}
+        aria-label={t('lists.moveUp', { title: item.title })}
+        onClick={() => move(index - 1)}
+      >
+        <span aria-hidden="true">↑</span>
+      </button>
+      <button
+        type="button"
+        class="btn plain small"
+        disabled={index === shown.length - 1}
+        aria-label={t('lists.moveDown', { title: item.title })}
+        onClick={() => move(index + 1)}
+      >
+        <span aria-hidden="true">↓</span>
+      </button>
+    </span>
   );
 }
 
@@ -176,17 +266,12 @@ export function ListScreen() {
   const q = query.value.get('q') ?? '';
   const tag = query.value.get('tag');
   const [title, setTitle] = useState('');
+  const [ordering, setOrdering] = useState(false);
+  const [announcement, setAnnouncement] = useState('');
 
-  const all = itemList.value.filter((i) => i.list_id === id);
-  const shown = all
-    .filter((i) => matches(i, filter, q, tag))
-    .sort((a, b) =>
-      a.status === b.status
-        ? b.created_at.localeCompare(a.created_at)
-        : a.status === 'planned'
-          ? -1
-          : 1,
-    );
+  const all = itemList.value.filter((i) => i.list_id === id).sort(byPosition);
+  const shown = all.filter((i) => matches(i, filter, q, tag));
+  const hiddenCount = all.filter((i) => i.hidden_at).length;
   const tags = [...new Set(all.flatMap((i) => i.tags))].sort();
 
   if (!ready.value) return <p>{t('app.loading')}</p>;
@@ -244,7 +329,16 @@ export function ListScreen() {
       )}
       <div class="row">
         <nav class="tabs" aria-label={t('lists.filterLabel')}>
-          {(['open', 'planned', 'done', 'archived', 'all'] as const).map((f) => (
+          {(
+            [
+              'open',
+              'planned',
+              'done',
+              'archived',
+              'all',
+              ...(hiddenCount > 0 || filter === 'hidden' ? (['hidden'] as const) : []),
+            ] as const
+          ).map((f) => (
             <a
               key={f}
               href={`/lists/${id}${f === 'open' ? '' : `?show=${f}`}`}
@@ -287,16 +381,58 @@ export function ListScreen() {
           </div>
         )}
       </div>
-      <p class="muted small" role="status">
-        {t('lists.showing', { count: shown.length })}
-      </p>
+      <div class="row">
+        <p class="muted small" role="status">
+          {announcement || t('lists.showing', { count: shown.length })}
+        </p>
+        {shown.length > 1 && (
+          <button
+            type="button"
+            class="btn plain small"
+            aria-pressed={ordering}
+            onClick={() => {
+              setOrdering(!ordering);
+              setAnnouncement('');
+            }}
+          >
+            {ordering ? t('lists.reorderDone') : t('lists.reorder')}
+          </button>
+        )}
+      </div>
+      {ordering && (
+        <p class="muted small">
+          {t('lists.orderHint')}{' '}
+          {all.some((i) => i.position !== null) && (
+            <button
+              type="button"
+              class="btn plain small"
+              onClick={async () => {
+                await orderList(id, []);
+                setAnnouncement(t('lists.orderReset'));
+              }}
+            >
+              {t('lists.resetOrder')}
+            </button>
+          )}
+        </p>
+      )}
       {shown.length === 0 ? (
         <p class="empty">{all.length ? t('lists.noMatch') : t('lists.empty')}</p>
       ) : (
         <ul class="plain items panel">
-          {shown.map((i) => (
-            <li key={i.id}>
+          {shown.map((i, index) => (
+            <li key={i.id} class={ordering ? 'ordering' : undefined}>
               <ItemRow item={i} />
+              {ordering && (
+                <OrderControls
+                  item={i}
+                  index={index}
+                  shown={shown}
+                  all={all}
+                  listId={id}
+                  announce={setAnnouncement}
+                />
+              )}
             </li>
           ))}
         </ul>
