@@ -27,7 +27,7 @@ English and Norwegian Bokmål; adding a language is one JSON file. Specified in 
 Two targets from the same code:
 
 - **Cloudflare Workers** (below): free tier, deployed automatically for each release.
-- **Your own server** with Podman, from the image `ghcr.io/olemd/someday` published with every release (`podman auto-update` keeps it current): see **[docs/self-hosting.md](docs/self-hosting.md)**.
+- **Your own server** with Podman, from the image `ghcr.io/olemd/someday` published with every release (`podman auto-update` keeps it current). **[docs/self-hosting.md](docs/self-hosting.md)** explains how it works (one Bun process with SQLite, scheduled work in-process, how it differs from Cloudflare), the setup step by step, every configuration option, updates, backups and troubleshooting.
 
 ### On Cloudflare
 
@@ -93,7 +93,7 @@ Without `CLOUDFLARE_API_TOKEN` the deploy workflow skips with a notice, so forks
 
 The Worker runs scheduled work (nudges, reminders, shared-list batches, purges) from a cron trigger every 15 minutes; the container does the same in-process.
 
-Every default lives in [`src/core/config.ts`](src/core/config.ts) and can be overridden with a wrangler var or environment variable of the same name (e.g. `REGISTRATION_MODE=open`, `DEVICE_LINK_TTL_MIN=10`, `ANON_COUNT_MIN_MEMBERS=5`). Per-user defaults (quiet hours, nudges, snooze length) are changed in the app's settings. `GET /api/health` lists configuration problems.
+Every default lives in [`src/core/config.ts`](src/core/config.ts) and can be overridden with a wrangler var or environment variable of the same name (e.g. `REGISTRATION_MODE=open`, `DEVICE_LINK_TTL_MIN=10`, `ANON_COUNT_MIN_MEMBERS=5`); all of them are described in the [configuration reference](docs/self-hosting.md#configuration-reference). Per-user defaults (quiet hours, nudges, snooze length) are changed in the app's settings. `GET /api/health` lists configuration problems.
 
 ## Development
 
