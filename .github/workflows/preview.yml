@@ -1,0 +1,60 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Optional preview deployment (§10): a PR labelled `preview` deploys to the
+# `preview` wrangler environment, with its own Worker and D1 database.
+# Needs the variables D1_PREVIEW_DATABASE_ID and PREVIEW_ORIGIN.
+# Only for branches in this repository: fork PRs never see the secrets.
+name: Preview
+
+on:
+  pull_request:
+    types: [labeled, synchronize]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: preview
+  cancel-in-progress: true
+
+jobs:
+  preview:
+    if: >-
+      contains(github.event.pull_request.labels.*.name, 'preview') &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      PUBLIC_ORIGIN: ${{ vars.PREVIEW_ORIGIN }}
+      PREVIEW_ORIGIN: ${{ vars.PREVIEW_ORIGIN }}
+      D1_DATABASE_ID: ${{ vars.D1_DATABASE_ID }}
+      D1_PREVIEW_DATABASE_ID: ${{ vars.D1_PREVIEW_DATABASE_ID }}
+      WORKER_NAME: ${{ vars.WORKER_NAME }}
+      SOURCE_URL: ${{ vars.SOURCE_URL }}
+      GIT_SHA: ${{ github.event.pull_request.head.sha }}
+    steps:
+      - name: Check preview configuration
+        id: check
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$D1_PREVIEW_DATABASE_ID" ] || [ -z "$PREVIEW_ORIGIN" ]; then
+            echo "::notice title=Preview skipped::Set CLOUDFLARE_API_TOKEN, D1_PREVIEW_DATABASE_ID and PREVIEW_ORIGIN."
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@v7
+        if: steps.check.outputs.enabled == 'true'
+      - uses: oven-sh/setup-bun@v2
+        if: steps.check.outputs.enabled == 'true'
+        with:
+          bun-version-file: package.json
+      - uses: actions/setup-node@v7
+        if: steps.check.outputs.enabled == 'true'
+        with:
+          node-version: 24
+      - if: steps.check.outputs.enabled == 'true'
+        run: bun install --frozen-lockfile && bun run build
+      - if: steps.check.outputs.enabled == 'true'
+        run: bunx wrangler d1 migrations apply DB --remote --env preview
+      - if: steps.check.outputs.enabled == 'true'
+        run: bunx wrangler deploy --env preview

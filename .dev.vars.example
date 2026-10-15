@@ -1,0 +1,3 @@
+# Copy to .dev.vars for `bun run dev`. Never commit .dev.vars.
+TOKEN_PEPPER=local-dev-pepper-change-me-0123456789abcdef
+BOOTSTRAP_ADMIN_TOKEN=local-dev-bootstrap-token

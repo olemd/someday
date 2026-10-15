@@ -1,0 +1,69 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Template for wrangler.jsonc, which is NOT committed (fork friendliness).
+// Render it with `bun run render-config` (scripts/render-wrangler-config.ts):
+// locally from .env / .dev.vars, in CI from GitHub Variables.
+// Placeholders (a dollar sign and a braced NAME) are substituted, then the result is parsed as JSONC.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "${WORKER_NAME}",
+  "main": "src/platform/cloudflare/worker.ts",
+  "compatibility_date": "2026-08-15",
+  "workers_dev": true,
+  "assets": {
+    "directory": "./dist/web",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    // /assets/* goes through the Worker so a missing hashed file returns 404
+    // instead of the SPA's index.html (which would be cached as immutable).
+    // Keep in sync with isServerPath() in src/modules/app.ts.
+    "run_worker_first": [
+      "/api/*",
+      "/assets/*",
+      "/mcp",
+      "/healthz",
+      "/.well-known/oauth-*",
+      "/oauth/token",
+      "/oauth/register",
+      "/oauth/revoke"
+    ]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "${WORKER_NAME}",
+      "database_id": "${D1_DATABASE_ID}",
+      "migrations_dir": "migrations"
+    }
+  ],
+  // Scheduled work (nudges, window checks, shared batches, purges): every 15 min.
+  "triggers": { "crons": ["*/15 * * * *"] },
+  "vars": {
+    "PUBLIC_ORIGIN": "${PUBLIC_ORIGIN}",
+    "SOURCE_URL": "${SOURCE_URL}",
+    "APP_VERSION": "${APP_VERSION}",
+    "GIT_SHA": "${GIT_SHA}"
+  },
+  "observability": { "enabled": true },
+  // Preview environment (PR label `preview`): its own Worker and D1 database.
+  "env": {
+    "preview": {
+      "name": "${WORKER_NAME}-preview",
+      "workers_dev": true,
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "${WORKER_NAME}-preview",
+          "database_id": "${D1_PREVIEW_DATABASE_ID}",
+          "migrations_dir": "migrations"
+        }
+      ],
+      "triggers": { "crons": ["*/15 * * * *"] },
+      "vars": {
+        "PUBLIC_ORIGIN": "${PREVIEW_ORIGIN}",
+        "SOURCE_URL": "${SOURCE_URL}",
+        "APP_VERSION": "${APP_VERSION}",
+        "GIT_SHA": "${GIT_SHA}"
+      }
+    }
+  }
+}

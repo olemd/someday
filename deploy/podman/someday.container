@@ -1,0 +1,33 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Podman Quadlet unit for a rootless, self-hosted Someday (docs/self-hosting.md).
+# Install as ~/.config/containers/systemd/someday.container, then:
+#   systemctl --user daemon-reload && systemctl --user start someday
+
+[Unit]
+Description=Someday
+Wants=network-online.target
+After=network-online.target
+
+[Container]
+# Build the image yourself (no image is published): see docs/self-hosting.md.
+Image=localhost/someday:latest
+ContainerName=someday
+# Only reachable from this host: the reverse proxy (Caddy) forwards to it.
+PublishPort=127.0.0.1:8080:8080
+# SQLite database (and its WAL files) live in this named volume.
+Volume=someday-data:/data:Z
+EnvironmentFile=%h/.config/someday/someday.env
+# Secrets as files: create with `podman secret create someday-pepper -` etc.
+Secret=someday-pepper,type=mount,target=/run/secrets/token_pepper
+ReadOnly=true
+Tmpfs=/tmp
+NoNewPrivileges=true
+DropCapability=ALL
+
+[Service]
+Restart=always
+# Give the server time to finish in-flight work on stop (it handles SIGTERM).
+TimeoutStopSec=30
+
+[Install]
+WantedBy=default.target

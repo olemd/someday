@@ -1,0 +1,5 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Guard against `bun test`: Bun's own test runner would bypass the Workers
+# vitest pool and run tests in the wrong runtime. Use `bun run test` instead.
+[test]
+root = "./.no-bun-test"

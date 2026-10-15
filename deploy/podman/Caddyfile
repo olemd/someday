@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Caddy in front of a self-hosted Someday (docs/self-hosting.md). Caddy gets
+# and renews the TLS certificate automatically; HTTPS is required (passkeys
+# and the __Host- session cookie only work over HTTPS).
+#
+# Replace the domain. Caddy appends the client address to X-Forwarded-For;
+# Someday believes it only from addresses listed in TRUSTED_PROXIES.
+
+someday.example.com {
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:8080
+}

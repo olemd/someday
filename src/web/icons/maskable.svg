@@ -1,0 +1,7 @@
+<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Someday">
+  <rect width="512" height="512" fill="#1d3a5f"/>
+  <circle cx="256" cy="236" r="92" fill="#f4b942"/>
+  <path d="M0 340c80-34 170-34 256 0s176 34 256 0v172H0z" fill="#2e6b5e"/>
+  <path d="M0 392c90-28 180-28 256 0s166 28 256 0v120H0z" fill="#21524a"/>
+</svg>

@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2023"],
+    "types": ["bun"],
+    "paths": {
+      "@test/platform": ["./test/platform/bun.ts"]
+    }
+  },
+  "include": ["src/platform/bun", "test/bun", "test/platform/bun.ts", "vitest.bun.config.ts"]
+}
