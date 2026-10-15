@@ -70,10 +70,22 @@ try {
     await page.getByText('See the northern lights').waitFor();
     await page.getByRole('link', { name: 'With details' }).click();
     await page.getByLabel('What').fill('Learn to make sourdough');
+    await page.getByText('More details (optional)').click();
     await page.getByLabel('Where').selectOption('indoor');
     await page.getByLabel('Tags').fill('food, learn');
     await page.getByRole('button', { name: 'Add idea' }).click();
     await page.getByRole('heading', { name: 'Learn to make sourdough' }).waitFor();
+  });
+
+  await step('adds an idea from the home screen in one step', async () => {
+    await page.getByRole('link', { name: 'Something' }).first().click();
+    await page.getByLabel('What would you like to do some day?').fill('Try ice bathing');
+    await page.getByRole('button', { name: 'Add', exact: true }).click();
+    await page.getByText(/^Added to /).waitFor();
+    await page.getByRole('button', { name: 'Add details' }).click();
+    await page.getByRole('heading', { name: 'Edit idea' }).waitFor();
+    await page.getByRole('button', { name: 'Cancel' }).click();
+    await page.getByRole('heading', { name: 'Try ice bathing' }).waitFor();
   });
 
   await step('suggests something with reasons', async () => {

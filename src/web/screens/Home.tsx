@@ -19,6 +19,7 @@ import {
   listById,
   lists,
   markSeen,
+  newId,
   ready,
   saveItem,
   snoozeItem,
@@ -36,6 +37,7 @@ import {
   energyLabel,
 } from '../lib/labels';
 import { Markdown } from '../lib/markdown';
+import { navigate } from '../lib/router';
 import { auth, settings, type Settings, type SuggestFilters } from '../lib/store';
 
 interface Shown {
@@ -161,6 +163,94 @@ function Filters({ f, set }: { f: SuggestFilters; set: (f: SuggestFilters) => vo
   );
 }
 
+const LAST_LIST = 'someday.quickAddList';
+
+/** The list quick-added ideas go to: the last one used, else the first list you own. */
+function defaultQuickList(): string {
+  const editable = lists.value.filter((l) => l.role !== 'viewer');
+  let last: string | null = null;
+  try {
+    last = localStorage.getItem(LAST_LIST);
+  } catch {
+    // storage blocked: fall back below
+  }
+  return (
+    editable.find((l) => l.id === last)?.id ??
+    editable.find((l) => l.role === 'owner')?.id ??
+    editable[0]?.id ??
+    ''
+  );
+}
+
+/**
+ * Add an idea with just a title (the common case). Details can be added
+ * afterwards from the confirmation; the list picker appears only when there
+ * is more than one list to choose from.
+ */
+function QuickAdd() {
+  const [title, setTitle] = useState('');
+  const [listId, setListId] = useState(defaultQuickList);
+  const editable = lists.value.filter((l) => l.role !== 'viewer');
+  const target = editable.some((l) => l.id === listId) ? listId : defaultQuickList();
+  if (!editable.length) return null;
+  return (
+    <form
+      class="panel stack tight"
+      onSubmit={async (e) => {
+        e.preventDefault();
+        const text = title.trim();
+        if (!text) return;
+        const id = newId();
+        await saveItem(id, { list_id: target, title: text });
+        setTitle('');
+        try {
+          localStorage.setItem(LAST_LIST, target);
+        } catch {
+          // a convenience only
+        }
+        const name = listById.value.get(target)?.name ?? '';
+        toast(t('home.added', { list: name }), {
+          action: { label: t('home.addDetails'), run: () => navigate(`/items/${id}?edit=1`) },
+        });
+      }}
+    >
+      <label class="strong" for="quick-home">
+        {t('home.quickAddLabel')}
+      </label>
+      <div class="quick-add">
+        <input
+          id="quick-home"
+          value={title}
+          maxLength={200}
+          placeholder={t('home.quickAddPlaceholder')}
+          onInput={(e) => setTitle(e.currentTarget.value)}
+        />
+        <button type="submit" class="btn primary" disabled={!title.trim()}>
+          <Icon name="plus" />
+          {t('common.add')}
+        </button>
+      </div>
+      {editable.length > 1 && (
+        <div class="inline small">
+          <label for="quick-home-list">{t('home.addTo')}</label>
+          <select
+            id="quick-home-list"
+            class="compact"
+            value={target}
+            onChange={(e) => setListId(e.currentTarget.value)}
+          >
+            {editable.map((l) => (
+              <option key={l.id} value={l.id}>
+                {l.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+    </form>
+  );
+}
+
 export function HomeScreen() {
   const [filters, setFilters] = useState<SuggestFilters>(settings.value?.suggest_filters ?? {});
   const [shown, setShown] = useState<Shown | null>(null);
@@ -226,6 +316,7 @@ export function HomeScreen() {
   return (
     <div class="stack">
       <h1 tabIndex={-1}>{t('home.greeting', { name: auth.value?.user?.display_name ?? '' })}</h1>
+      <QuickAdd />
       <Filters f={filters} set={setFilters} />
       <div class="hero">
         <button

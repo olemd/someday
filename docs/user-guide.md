@@ -8,6 +8,14 @@ Someday is not a todo list. It is a slow-moving collection of things you would l
 
 Someday has no passwords: you log in with a passkey (fingerprint, face or device PIN). Most instances are invite-only: someone who already uses it sends you an invite link (to the instance, or to a shared list), and you create your account from that link. The first account is created by whoever runs the server, with the setup link.
 
+## Adding an idea
+
+Type it in **What would you like to do some day?** at the top of the home screen and press **Add**. That is all it takes. If you have more than one list, pick the list underneath (your last choice is remembered). Tap **Add details** in the confirmation if you want to say more.
+
+![A new idea: just the title, with the details tucked away](screenshots/14-new-idea.png)
+
+Details are always optional and stay folded away under **More details** until you need them.
+
 ## Give me something
 
 ![The suggestion screen: northern lights, with the reasons it was picked](screenshots/01-give-me-something.png)
@@ -32,7 +40,7 @@ It works offline too: the same suggester runs on your device.
 
 ![A list with ideas, their context and tags](screenshots/03-list.png)
 
-Type a title and press **Add**, or use **With details**. Everything except the title is optional, and anything left unset fits every filter:
+Add ideas from the home screen or at the top of a list; **With details** opens the form. Everything except the title is optional, and anything left unset fits every filter:
 
 - time it takes, indoor/outdoor, cost, energy, solo/together;
 - a date window ("not after 2030") and/or a season (the months it is possible in, e.g. September–March for the northern lights);

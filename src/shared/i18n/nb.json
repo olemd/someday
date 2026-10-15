@@ -23,7 +23,12 @@
   "home": {
     "greeting": "Hei, {name}",
     "emptyIntro": "Ingenting her ennå. Hva vil du gjøre eller finne ut av en dag?",
-    "addFirst": "Legg til din første idé"
+    "addFirst": "Legg til din første idé",
+    "quickAddLabel": "Hva vil du gjøre en dag?",
+    "quickAddPlaceholder": "f.eks. Se nordlyset",
+    "addTo": "På lista",
+    "added": "Lagt til i {list}",
+    "addDetails": "Legg til detaljer"
   },
   "common": {
     "save": "Lagre",
@@ -387,7 +392,8 @@
     "history": "Historikk",
     "someone": "Noen",
     "via": "via {app}",
-    "historyUnavailable": "Historikken vises når du er på nett og ideen er lagret."
+    "historyUnavailable": "Historikken vises når du er på nett og ideen er lagret.",
+    "moreDetails": "Flere detaljer (valgfritt)"
   },
   "lists": {
     "title": "Lister",

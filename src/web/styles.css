@@ -829,3 +829,26 @@ fieldset.panel > legend {
 .welcome-points li + li {
   margin-top: 0.5rem;
 }
+
+.more-details > summary {
+  color: var(--accent);
+}
+.more-details[open] > summary {
+  margin-bottom: 0.5rem;
+}
+
+/* ── Quick add on the home screen ───────────────────────────────────── */
+
+.strong {
+  font-weight: 650;
+}
+select.compact {
+  width: auto;
+  min-height: 36px;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.9rem;
+}
+/* A closed filter panel is a slim bar, not a big empty box. */
+details.panel:not([open]) {
+  padding-block: 0.25rem;
+}

@@ -158,7 +158,13 @@ function History({ id }: { id: string }) {
 export function ItemScreen() {
   const id = route.value.split('/')[2] ?? '';
   const item = items.value.get(id);
-  const [editing, setEditing] = useState(false);
+  // ?edit=1 (from "Add details" after a quick add) opens the form directly.
+  const [editing, setEditingState] = useState(query.value.get('edit') === '1');
+  const setEditing = (on: boolean) => {
+    setEditingState(on);
+    // Leaving the form drops ?edit=1, so a reload shows the idea, not the form.
+    if (!on && query.value.has('edit')) navigate(`/items/${id}`, true);
+  };
 
   if (!ready.value) return <p>{t('app.loading')}</p>;
   if (!item) {

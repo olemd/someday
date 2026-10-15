@@ -23,7 +23,12 @@
   "home": {
     "greeting": "Hi, {name}",
     "emptyIntro": "Nothing here yet. What would you like to do or find out about some day?",
-    "addFirst": "Add your first idea"
+    "addFirst": "Add your first idea",
+    "quickAddLabel": "What would you like to do some day?",
+    "quickAddPlaceholder": "e.g. See the northern lights",
+    "addTo": "On the list",
+    "added": "Added to {list}",
+    "addDetails": "Add details"
   },
   "common": {
     "save": "Save",
@@ -387,7 +392,8 @@
     "history": "History",
     "someone": "Someone",
     "via": "via {app}",
-    "historyUnavailable": "History is shown when you are online and the idea has been saved."
+    "historyUnavailable": "History is shown when you are online and the idea has been saved.",
+    "moreDetails": "More details (optional)"
   },
   "lists": {
     "title": "Lists",

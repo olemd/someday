@@ -286,6 +286,11 @@ try {
   }
   await shot(page, '01-give-me-something');
 
+  // 1b. Adding an idea: just a title, details tucked away.
+  await page.goto(`${O}/items/new?list=${defaultList}`);
+  await page.getByLabel('What').fill('Learn to juggle');
+  await shot(page, '14-new-idea');
+
   // 2. A list.
   await page.goto(`${O}/lists`);
   await shot(page, '02-lists');
