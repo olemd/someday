@@ -10,10 +10,15 @@ type H = Harness & { user: { id: string; defaultListId: string } };
 const CLIENT = 'https://client.example/oauth/metadata.json';
 const REDIRECT = 'http://127.0.0.1:33418/callback';
 
-/** A fake network: serves the client's metadata document. */
+/**
+ * A fake network: serves the client's metadata document. It builds a real
+ * Request from the options first, so the Workers pool rejects options that
+ * workerd does not support (e.g. `redirect: 'error'`), as production would.
+ */
 const network =
   (doc: Record<string, unknown> = {}, at = CLIENT) =>
-  async (url: string) => {
+  async (url: string, init?: RequestInit) => {
+    new Request(url, init);
     if (url === at) {
       return new Response(
         JSON.stringify({
@@ -191,6 +196,21 @@ describe('authorization code flow', () => {
       `/api/oauth/authorize?${new URLSearchParams({ client_id: other, redirect_uri: REDIRECT })}`,
     );
     expect(mismatch).toMatchObject({ ok: false, error: 'invalid_client' });
+  });
+
+  it('refuses a metadata document that redirects', async () => {
+    const h = (await authed({
+      fetch: async (url, init) => {
+        expect(init?.redirect).toBe('manual');
+        return new Response(null, { status: 302, headers: { location: `${url}?x` } });
+      },
+    })) as H;
+    const r = await call(
+      h,
+      'GET',
+      `/api/oauth/authorize?${new URLSearchParams({ client_id: CLIENT, redirect_uri: REDIRECT })}`,
+    );
+    expect(r).toMatchObject({ ok: false, error: 'invalid_client' });
   });
 
   it('requires PKCE S256 (reported through the redirect)', async () => {

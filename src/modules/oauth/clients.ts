@@ -126,12 +126,17 @@ async function fetchCimd(ctx: Ctx, url: string): Promise<OAuthClient> {
   try {
     res = await ctx.fetch(url, {
       headers: { accept: 'application/json' },
-      redirect: 'error',
+      // Workers reject `redirect: 'error'`; with 'manual' a redirect comes
+      // back as a 3xx response, which is refused below like any non-2xx.
+      redirect: 'manual',
       signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
     });
-  } catch {
+  } catch (err) {
+    ctx.log.warn('client metadata fetch failed', { client_id: url, err: String(err) });
     throw new OAuthError('invalid_client', 'Could not fetch the client metadata document');
   }
+  if (res.status >= 300 && res.status < 400)
+    throw new OAuthError('invalid_client', 'Client metadata document redirects; use its final URL');
   if (!res.ok)
     throw new OAuthError('invalid_client', `Client metadata document returned ${res.status}`);
   const text = await res.text();
