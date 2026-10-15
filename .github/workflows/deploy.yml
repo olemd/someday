@@ -83,9 +83,16 @@ jobs:
       - name: Apply D1 migrations
         if: steps.check.outputs.enabled == 'true'
         run: bunx wrangler d1 migrations apply DB --remote
+      # Tag and message show in the Cloudflare dashboard which release (and
+      # which run) a version is; without them it only says "Manually deployed".
       - name: Deploy Worker
         if: steps.check.outputs.enabled == 'true'
-        run: bunx wrangler deploy --env ''
+        env:
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          version="v$(jq -r .version package.json)"
+          bunx wrangler deploy --env '' --tag "$version" \
+            --message "$version (${GIT_SHA:0:7}) from GitHub Actions run $RUN_ID"
       - name: Smoke test
         if: steps.check.outputs.enabled == 'true'
         run: bun scripts/smoke-test.ts
