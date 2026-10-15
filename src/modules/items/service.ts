@@ -296,7 +296,10 @@ async function createItem(
   const clock: Clock = { _rev: ulid() };
   for (const f of ITEM_FIELDS) clock[f] = tsFor(f);
   const cols = ITEM_FIELDS.filter((f) => f !== 'tags');
-  const gate = { sql: 'EXISTS (SELECT 1 FROM items WHERE id = ? AND field_clock = ?)', params: [id, JSON.stringify(clock)] };
+  const gate = {
+    sql: 'EXISTS (SELECT 1 FROM items WHERE id = ? AND field_clock = ?)',
+    params: [id, JSON.stringify(clock)],
+  };
   await ctx.db.batch([
     {
       sql: `INSERT OR IGNORE INTO items (id, ${cols.join(', ')}, created_by, created_at, updated_at, field_clock)
@@ -311,9 +314,19 @@ async function createItem(
       ],
     },
     ...tagStmts(id, all.tags, gate),
-    changeStmt(ctx, { entity: 'item', entityId: id, listId: all.list_id, op: 'upsert', actor }, gate),
+    changeStmt(
+      ctx,
+      { entity: 'item', entityId: id, listId: all.list_id, op: 'upsert', actor },
+      gate,
+    ),
   ]);
-  if (!(await ctx.db.first('SELECT 1 FROM items WHERE id = ? AND field_clock = ?', id, JSON.stringify(clock)))) {
+  if (
+    !(await ctx.db.first(
+      'SELECT 1 FROM items WHERE id = ? AND field_clock = ?',
+      id,
+      JSON.stringify(clock),
+    ))
+  ) {
     // Lost a race with a concurrent create of the same id: retry as an update.
     throw new HttpError(409, 'conflict', 'The item changed while saving; try again');
   }

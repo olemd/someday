@@ -247,16 +247,7 @@ export async function updateLog(
       sql: `UPDATE item_log SET ${sets.join(', ')}, updated_at = ? WHERE id = ?`,
       params: [...params, iso(ctx.clock.now()), id],
     },
-    ...logChanges(
-      ctx,
-      actor,
-      access.userId,
-      id,
-      info.list_id,
-      row.item_id,
-      'upsert',
-      publicChange,
-    ),
+    ...logChanges(ctx, actor, access.userId, id, info.list_id, row.item_id, 'upsert', publicChange),
   ]);
   return getLogEntry(ctx, access.userId, id);
 }

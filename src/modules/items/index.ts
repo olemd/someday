@@ -92,7 +92,11 @@ function itemRoutes(app: Router) {
       const { id } = c.req.valid('param');
       // An item must exist to be patched (creating goes through POST).
       await getItem(c.env.ctx, access, id);
-      await writeItem(c.env.ctx, access, actor, { kind: 'upsert', id, fields: c.req.valid('json') });
+      await writeItem(c.env.ctx, access, actor, {
+        kind: 'upsert',
+        id,
+        fields: c.req.valid('json'),
+      });
       return c.json(await getItem(c.env.ctx, access, id), 200);
     },
   );

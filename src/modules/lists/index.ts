@@ -38,7 +38,13 @@ function routes(app: Router) {
       path: '/',
       tags: ['lists'],
       request: body(
-        z.object({ id: z.string().regex(/^[0-9A-Za-z_-]{10,40}$/).optional(), name: z.string().trim().min(1).max(100) }),
+        z.object({
+          id: z
+            .string()
+            .regex(/^[0-9A-Za-z_-]{10,40}$/)
+            .optional(),
+          name: z.string().trim().min(1).max(100),
+        }),
       ),
       responses: { 201: json(ListSchema) },
     }),
