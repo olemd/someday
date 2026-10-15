@@ -10,6 +10,8 @@ Someday is an [MCP](https://modelcontextprotocol.io) server, so an assistant can
 
 1. Add the server URL in your assistant (for example "Add custom connector" or an `mcp.json` entry with `"url": "https://<your Someday>/mcp"`).
 2. The client opens Someday's consent page. You must be logged in with a passkey. The page shows the client's name, its identity (the URL of its metadata document) and where you will be sent back. A warning appears when that address is on your own computer (`localhost`).
+   ![The consent screen](screenshots/09-connect-assistant.png)
+
 3. Choose what it may do — **read** (search, view, suggest), **write** (add and change ideas, set status, log what you did), **notify** (push notifications) — and optionally restrict it to some lists.
 4. **Settings → Connected apps** lists every connected client with its access and when it was last used. **Disconnect** revokes it at once.
 

@@ -6,7 +6,9 @@ Not a todo list: a slow-moving collection of ideas, experiences and curiosities 
 
 English and Norwegian Bokmål; adding a language is one JSON file. Specified in [SPEC.md](SPEC.md).
 
-[Self-hosting](docs/self-hosting.md) · [Connecting assistants (MCP)](docs/mcp.md) · [Export format](docs/someday-export-v1.schema.json) · [Conventions for contributors](CLAUDE.md) · [Licence](#licence)
+![Someday suggesting the northern lights, with the reasons it was picked](docs/screenshots/01-give-me-something.png)
+
+**[User guide](docs/user-guide.md)** · [Self-hosting](docs/self-hosting.md) · [Connecting assistants (MCP)](docs/mcp.md) · [Export format](docs/someday-export-v1.schema.json) · [Conventions for contributors](CLAUDE.md) · [Licence](#licence)
 
 ## Features
 
@@ -29,19 +31,42 @@ Two targets from the same code:
 
 ### On Cloudflare
 
-You need a Cloudflare account (free plan), [Bun](https://bun.sh) (pinned in `package.json`) and Node.js ≥ 20 (wrangler runs on Node).
+You need a Cloudflare account (the free plan is enough), [Bun](https://bun.sh) (pinned in `package.json`), Node.js ≥ 20 (wrangler runs on Node) and, for continuous deployment, the [GitHub CLI](https://cli.github.com). A custom domain is optional; without one Someday runs on `*.workers.dev`.
 
-1. **Fork and install**: `git clone https://github.com/<you>/someday && cd someday && bun install && bunx wrangler login`.
-2. **Create the database**: `bunx wrangler d1 create someday` and note the `database_id`.
-3. **Render the config**: copy `.env.example` to `.env`, set `PUBLIC_ORIGIN` (e.g. `https://someday.example.com`, no trailing slash) and `D1_DATABASE_ID`, then `bun run render-config`.
-4. **Secrets**:
+```sh
+git clone https://github.com/<you>/someday && cd someday
+bun install
+bunx wrangler login
+gh auth login          # optional: lets bootstrap configure the GitHub repo
+bun run bootstrap
+```
+
+`bootstrap` asks for a Worker name, an optional custom domain and your source URL, then:
+
+1. creates the D1 database (and reuses it on later runs) and applies the migrations,
+2. builds and deploys the Worker; without a custom domain the `*.workers.dev` address becomes `PUBLIC_ORIGIN`,
+3. generates and stores the Worker secrets `TOKEN_PEPPER`, `BOOTSTRAP_ADMIN_TOKEN` and the VAPID keys (existing ones are kept),
+4. optionally sets up the `preview` environment with its own database,
+5. with `gh`: sets the GitHub Variables, the `CLOUDFLARE_ACCOUNT_ID` secret and the `CLOUDFLARE_API_TOKEN` secret. For the token it prints a link to Cloudflare's "Create API token" page with the needed permissions filled in; you create the token there and paste it, bootstrap checks it against your account and passes it straight to `gh` (it is never written to disk),
+6. checks `/api/health` and prints the `/setup?token=…` link for creating the first admin.
+
+It is safe to run again, for example to add the GitHub settings later. Without `gh`, it prints the values to set by hand.
+
+<details>
+<summary>Doing it by hand instead</summary>
+
+1. `bunx wrangler d1 create someday` and note the `database_id`.
+2. Copy `.env.example` to `.env`, set `PUBLIC_ORIGIN` (no trailing slash) and `D1_DATABASE_ID`, then `bun run render-config`.
+3. Secrets:
    ```sh
    openssl rand -base64 48 | bunx wrangler secret put TOKEN_PEPPER
    openssl rand -base64 24 | tee /dev/stderr | bunx wrangler secret put BOOTSTRAP_ADMIN_TOKEN
    bun run vapid   # then `bunx wrangler secret put VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY`
    ```
-5. **Deploy**: `bunx wrangler d1 migrations apply DB --remote && bun run build && bunx wrangler deploy`.
-6. **Create the first admin**: open `https://<your origin>/setup?token=<BOOTSTRAP_ADMIN_TOKEN>` and create a passkey. The setup page disables itself once an admin exists.
+4. `bunx wrangler d1 migrations apply DB --remote && bun run build && bunx wrangler deploy`.
+5. Open `https://<your origin>/setup?token=<BOOTSTRAP_ADMIN_TOKEN>`.
+
+</details>
 
 ### Continuous deployment from GitHub
 
@@ -79,6 +104,7 @@ bun run test:bun       # the same suite against the self-hosted platform (SQLite
 bun run lint && bun run typecheck && bun run i18n:check && bun run build
 bun run e2e            # Playwright against the self-hosted server, with a virtual passkey
                        # (CHROMIUM_PATH=/usr/bin/chromium to use an installed Chromium)
+bun run screenshots    # regenerate docs/screenshots with demo data (same requirements)
 ```
 
 ## Licence
