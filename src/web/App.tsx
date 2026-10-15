@@ -11,6 +11,7 @@ import { dismissFailed, failedOps, pendingCount, startData } from './lib/data';
 import { dateTime } from './lib/fmt';
 import { setLocale, t } from './lib/i18n';
 import { navigate, onLinkClick, route } from './lib/router';
+import { updateReady } from './lib/update';
 import { auth, loadAuth, loadNotices, loadSettings, online, settings } from './lib/store';
 import { AdminScreen } from './screens/Admin';
 import { MustRegister, NewDevice, Signup, Welcome } from './screens/Auth';
@@ -117,6 +118,14 @@ function Shell({ children, bare = false }: { children: preact.ComponentChildren;
       {!online.value && (
         <p class="banner" role="status">
           {t('app.offline')}
+        </p>
+      )}
+      {updateReady.value && (
+        <p class="banner" role="status">
+          {t('app.updateReady')}{' '}
+          <button type="button" class="btn plain small" onClick={() => location.reload()}>
+            {t('app.reload')}
+          </button>
         </p>
       )}
       {!bare && <NoticeBanners />}

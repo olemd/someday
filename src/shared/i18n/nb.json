@@ -11,7 +11,9 @@
     "source": "Kildekode (AGPL-3.0)",
     "loading": "Laster …",
     "offline": "Du er frakoblet. Endringer lagres her og sendes når du er på nett igjen.",
-    "skip": "Hopp til innholdet"
+    "skip": "Hopp til innholdet",
+    "updateReady": "En ny versjon av Someday er klar.",
+    "reload": "Last inn på nytt"
   },
   "nav": {
     "label": "Hovedmeny",

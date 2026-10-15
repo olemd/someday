@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Bun-only: the self-hosted server pieces (static files, client IP, migrations, runtime).
 import { Database } from 'bun:sqlite';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -60,6 +60,24 @@ describe('static files (same rules as Workers Static Assets)', () => {
     expect(res.status).toBe(200);
     expect(await res.text()).toContain('shell');
     expect(res.headers.get('content-security-policy')).toBe("default-src 'self'");
+  });
+
+  it('with the real _headers, the app shell is always revalidated and assets are immutable', () => {
+    const real = mkdtempSync(join(tmpdir(), 'someday-web-'));
+    try {
+      mkdirSync(join(real, 'assets'));
+      writeFileSync(join(real, 'index.html'), '<!doctype html><title>shell</title>');
+      writeFileSync(join(real, 'assets', 'main-abc.js'), 'console.log(1)');
+      writeFileSync(join(real, '_headers'), readFileSync('src/web/public/_headers', 'utf8'));
+      const serve = createStaticHandler(real);
+      for (const path of ['/', '/index.html', '/lists/abc'])
+        expect(serve(get(path)).headers.get('cache-control'), path).toBe('no-cache');
+      expect(serve(get('/assets/main-abc.js')).headers.get('cache-control')).toBe(
+        'public, max-age=31536000, immutable',
+      );
+    } finally {
+      rmSync(real, { recursive: true, force: true });
+    }
   });
 
   it('returns 404 no-store for missing hashed assets (never the SPA page)', () => {

@@ -12,6 +12,15 @@
 /sw.js
   Cache-Control: no-cache
 
+# The app shell: always revalidated, so a new release's asset list is seen at
+# once. Cloudflare does this for HTML by default; the self-hosted server
+# serves every app route with the "/" rules.
+/
+  Cache-Control: no-cache
+
+/index.html
+  Cache-Control: no-cache
+
 /manifest.webmanifest
   Cache-Control: no-cache
 

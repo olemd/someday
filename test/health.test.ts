@@ -19,6 +19,12 @@ describe('GET /api/health', () => {
     expect(res.headers.get('cache-control')).toBe('no-store');
   });
 
+  it('says which version the server runs, so open apps can offer a reload', async () => {
+    const res = await harness().fetch('/api/health');
+    expect(res.headers.get('x-app-version')).toBe('9.9.9');
+    expect((await harness().fetch('/api/nope')).headers.get('x-app-version')).toBe('9.9.9');
+  });
+
   it('rejects unauthenticated API calls with 401', async () => {
     expect((await harness().json('/api/nope')).status).toBe(401);
   });

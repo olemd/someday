@@ -87,6 +87,11 @@ export function createApp(modules: Module[]): Router {
     await next();
     if (!c.res.headers.has('cache-control')) c.res.headers.set('cache-control', 'no-store');
   });
+  // The PWA compares this with its own build and offers a reload (src/web/lib/update.ts).
+  app.use('/api/*', async (c, next) => {
+    await next();
+    c.res.headers.set('x-app-version', c.env.ctx.config.APP_VERSION);
+  });
   app.use('/api/*', originCheck);
 
   const publicPaths = new Set<string>(['/api/openapi.json']);

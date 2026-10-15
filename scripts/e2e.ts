@@ -256,6 +256,24 @@ try {
     await page.getByText('1 heart', { exact: true }).waitFor();
   });
 
+  await step('offers a reload when the server runs a newer version', async () => {
+    // The test server reports a dev version (never prompts): pretend a release.
+    await page.route('**/api/**', async (route) => {
+      const res = await route.fetch();
+      await route.fulfill({
+        response: res,
+        headers: { ...res.headers(), 'x-app-version': '99.0.0' },
+      });
+    });
+    await page.reload();
+    await page.getByText('A new version of Someday is ready.').waitFor();
+    await page.unroute('**/api/**');
+    await page.getByRole('button', { name: 'Reload' }).click();
+    await page.getByText('Idea from Bob').waitFor();
+    if (await page.getByText('A new version of Someday is ready.').count())
+      throw new Error('update banner still shown after reload');
+  });
+
   await step('downloads the data export', async () => {
     await page.getByRole('link', { name: 'Settings' }).first().click();
     const [download] = await Promise.all([

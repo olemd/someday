@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 /** Same-origin JSON API client. Errors carry the server's {error, message, ...}. */
+import { noteServerVersion } from './update';
 
 export class ApiError extends Error {
   constructor(
@@ -33,6 +34,7 @@ export async function api<T = unknown>(
     if ((err as Error).name === 'AbortError') throw err;
     throw new NetworkError(String(err));
   }
+  noteServerVersion(res.headers.get('x-app-version'));
   const text = await res.text();
   const body = text ? JSON.parse(text) : null;
   if (!res.ok) throw new ApiError(res.status, body ?? { error: `http_${res.status}` });

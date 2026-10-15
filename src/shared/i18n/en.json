@@ -11,7 +11,9 @@
     "source": "Source code (AGPL-3.0)",
     "loading": "Loading…",
     "offline": "You are offline. Changes are saved here and sent when you are back online.",
-    "skip": "Skip to content"
+    "skip": "Skip to content",
+    "updateReady": "A new version of Someday is ready.",
+    "reload": "Reload"
   },
   "nav": {
     "label": "Main",
