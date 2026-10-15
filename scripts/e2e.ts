@@ -8,39 +8,17 @@
  *   bun scripts/e2e.ts            # headless
  *   HEADED=1 bun scripts/e2e.ts   # watch it
  */
-import { mkdtempSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { chromium, type Page } from 'playwright';
+import type { Page } from 'playwright';
+import { BOOTSTRAP_TOKEN as TOKEN, launch, passkeyContext, startServer } from './browser';
 
 const PORT = 18_765;
-const ORIGIN = `http://localhost:${PORT}`;
-const TOKEN = 'e2e-bootstrap-token-0123456789';
-const dir = mkdtempSync(join(tmpdir(), 'someday-e2e-'));
-
-const server = Bun.spawn(['bun', 'src/platform/bun/server.ts'], {
-  env: {
-    ...process.env,
-    PORT: String(PORT),
-    HOST: '127.0.0.1',
-    DATABASE_PATH: join(dir, 'e2e.db'),
-    STATIC_DIR: 'dist/web',
-    PUBLIC_ORIGIN: ORIGIN,
-    TOKEN_PEPPER: 'e2e-pepper-e2e-pepper-e2e-pepper-0123',
-    BOOTSTRAP_ADMIN_TOKEN: TOKEN,
-    // The e2e MCP client registers dynamically (no hosted metadata document).
-    MCP_ALLOW_DCR: 'true',
-  },
-  stdout: 'ignore',
-  stderr: 'inherit',
-});
-
-const cleanup = () => {
-  server.kill();
-  // KEEP_DB=1: leave the database for inspection.
-  if (process.env.KEEP_DB) console.log(`database kept in ${dir}`);
-  else rmSync(dir, { recursive: true, force: true });
-};
+// The e2e MCP client registers dynamically (no hosted metadata document).
+const server = await startServer(PORT, { MCP_ALLOW_DCR: 'true' });
+const ORIGIN = server.origin;
+const dir = server.dir;
+// KEEP_DB=1: leave the database for inspection.
+const cleanup = () => server.stop(!!process.env.KEEP_DB);
 
 let failed = false;
 /** SCREENSHOTS=<dir>: save a screenshot after each step (light and narrow, for review). */
@@ -68,40 +46,12 @@ const step = async (name: string, fn: () => Promise<void>) => {
 };
 
 try {
-  for (let i = 0; i < 50; i++) {
-    if (
-      await fetch(`${ORIGIN}/healthz`).then(
-        (r) => r.ok,
-        () => false,
-      )
-    )
-      break;
-    await Bun.sleep(100);
-  }
-  // CHROMIUM_PATH: use an installed Chromium instead of Playwright's download.
-  const browser = await chromium.launch({
-    headless: !process.env.HEADED,
-    executablePath: process.env.CHROMIUM_PATH || undefined,
-  });
-  const context = await browser.newContext({ locale: 'en-GB', timezoneId: 'Europe/Oslo' });
-  const page: Page = await context.newPage();
+  const browser = await launch();
+  const { context, page } = await passkeyContext(browser);
   shotPage = page;
   page.on('pageerror', (e) => errors.push(String(e)));
   page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
   page.on('response', (r) => r.status() >= 400 && errors.push(`${r.status()} ${r.url()}`));
-
-  // A virtual platform authenticator with user verification: real passkeys.
-  const cdp = await context.newCDPSession(page);
-  await cdp.send('WebAuthn.enable');
-  await cdp.send('WebAuthn.addVirtualAuthenticator', {
-    options: {
-      protocol: 'ctap2',
-      transport: 'internal',
-      hasResidentKey: true,
-      hasUserVerification: true,
-      isUserVerified: true,
-    },
-  });
 
   await step('setup creates the first admin with a passkey', async () => {
     await page.goto(`${ORIGIN}/setup?token=${TOKEN}`);
@@ -163,20 +113,8 @@ try {
     await page.getByRole('button', { name: 'Create invite link' }).click();
     const url = (await page.locator('code.break').textContent())!.trim();
 
-    const bobCtx = await browser.newContext({ locale: 'en-GB', timezoneId: 'Europe/Oslo' });
-    const bob = await bobCtx.newPage();
+    const { context: bobCtx, page: bob } = await passkeyContext(browser);
     bob.on('pageerror', (e) => errors.push(`bob: ${e}`));
-    const bobCdp = await bobCtx.newCDPSession(bob);
-    await bobCdp.send('WebAuthn.enable');
-    await bobCdp.send('WebAuthn.addVirtualAuthenticator', {
-      options: {
-        protocol: 'ctap2',
-        transport: 'internal',
-        hasResidentKey: true,
-        hasUserVerification: true,
-        isUserVerified: true,
-      },
-    });
     await bob.goto(url);
     await bob.getByRole('heading', { name: 'Join “Someday”' }).waitFor();
     await bob.getByRole('button', { name: 'Create an account' }).click();

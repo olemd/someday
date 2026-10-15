@@ -51,6 +51,8 @@
     "licenses": "license-checker-rseidelsohn --production --excludePrivatePackages --onlyAllow \"MIT;MIT-0;ISC;BSD-2-Clause;BSD-3-Clause;Apache-2.0;0BSD;BlueOak-1.0.0;CC0-1.0;Unlicense;Python-2.0\"",
     "db:migrate:local": "bun run render-config && wrangler d1 migrations apply DB --local",
     "vapid": "bun scripts/vapid.ts",
-    "e2e": "bun run build:web && bun scripts/e2e.ts"
+    "e2e": "bun run build:web && bun scripts/e2e.ts",
+    "screenshots": "bun run build:web && bun scripts/screenshots.ts",
+    "bootstrap": "bun scripts/bootstrap.ts"
   }
 }

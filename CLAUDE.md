@@ -8,6 +8,8 @@ Read `SPEC.md` first; it is the source of truth for behaviour. The sibling proje
 - `bun run test` — vitest inside the Workers runtime (D1). **Never `bun test`** (`bunfig.toml` points Bun's own runner at an empty dir).
 - `bun run test:bun` — the same suite against the self-hosted platform (bun:sqlite), plus Bun-only tests in `test/bun/`. Both must pass.
 - `bun run lint` (Biome + SPDX check), `bun run typecheck` (every tsconfig), `bun run i18n:check`, `bun run build`.
+- `bun run e2e` / `bun run screenshots` — Playwright against a throwaway self-hosted server (`scripts/browser.ts`), virtual passkeys; set `CHROMIUM_PATH=/usr/bin/chromium` to skip Playwright's download. Regenerate screenshots after visible UI changes.
+- `bun run bootstrap` — interactive Cloudflare + GitHub setup (operator use; touches real accounts, never run it from automation).
 - Before committing: lint, typecheck, i18n:check, test, test:bun, build.
 
 ## Layout and boundaries
