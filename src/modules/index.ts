@@ -4,7 +4,9 @@ import { adminModule } from './admin';
 import { authModule } from './auth';
 import { healthModule, healthzModule } from './health';
 import { invitesModule } from './invites';
+import { itemsModule, logModule, tagsModule } from './items';
 import { linksModule } from './links';
+import { listsModule } from './lists';
 import { noticesModule } from './notices';
 import { pushModule } from './push';
 import { settingsModule } from './settings';
@@ -20,4 +22,8 @@ export const modules: Module[] = [
   settingsModule,
   pushModule,
   adminModule,
+  listsModule,
+  itemsModule,
+  logModule,
+  tagsModule,
 ];

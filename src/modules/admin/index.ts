@@ -161,6 +161,7 @@ function routes(app: Router) {
             'SELECT COUNT(*) AS n FROM users WHERE disabled_at IS NOT NULL',
           ),
           lists: await count('SELECT COUNT(*) AS n FROM lists WHERE deleted_at IS NULL'),
+          items: await count('SELECT COUNT(*) AS n FROM items'),
           push_subscriptions: await count('SELECT COUNT(*) AS n FROM push_subscriptions'),
         },
         200,
