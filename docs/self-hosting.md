@@ -54,6 +54,10 @@ Use [`deploy/podman/Caddyfile`](../deploy/podman/Caddyfile) (replace the domain)
 
 Open `https://<your domain>/setup?token=<BOOTSTRAP_ADMIN_TOKEN>` and create a passkey. Setup disables itself once an admin exists.
 
+## Assistants (MCP)
+
+`https://<your domain>/mcp` works the same as on Cloudflare; see [docs/mcp.md](mcp.md). The server fetches client metadata documents from the internet when a client connects; it refuses private, loopback and IP-literal addresses.
+
 ## Operations
 
 - **Health**: `GET /healthz` (liveness) and `GET /api/health` (version, git SHA, configuration problems).

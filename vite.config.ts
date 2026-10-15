@@ -12,7 +12,11 @@ import { defineConfig, type Plugin } from 'vite';
 const pkg = JSON.parse(readFileSync('./package.json', 'utf8')) as { version: string };
 const gitSha = (() => {
   try {
-    return execSync('git describe --always --dirty --abbrev=40').toString().trim();
+    return execSync('git describe --always --dirty --abbrev=40', {
+      stdio: ['ignore', 'pipe', 'ignore'],
+    })
+      .toString()
+      .trim();
   } catch {
     return 'unknown';
   }

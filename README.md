@@ -6,7 +6,7 @@ Not a todo list: a slow-moving collection of ideas, experiences and curiosities 
 
 English and Norwegian Bokmål; adding a language is one JSON file. Specified in [SPEC.md](SPEC.md).
 
-[Self-hosting](docs/self-hosting.md) · [Conventions for contributors](CLAUDE.md) · [Licence](#licence)
+[Self-hosting](docs/self-hosting.md) · [Connecting assistants (MCP)](docs/mcp.md) · [Export format](docs/someday-export-v1.schema.json) · [Conventions for contributors](CLAUDE.md) · [Licence](#licence)
 
 ## Features
 
@@ -64,6 +64,8 @@ Without `CLOUDFLARE_API_TOKEN` the deploy workflow skips with a notice, so forks
 
 ## Configuration
 
+The Worker runs scheduled work (nudges, reminders, shared-list batches, purges) from a cron trigger every 15 minutes; the container does the same in-process.
+
 Every default lives in [`src/core/config.ts`](src/core/config.ts) and can be overridden with a wrangler var or environment variable of the same name (e.g. `REGISTRATION_MODE=open`, `DEVICE_LINK_TTL_MIN=10`, `ANON_COUNT_MIN_MEMBERS=5`). Per-user defaults (quiet hours, nudges, snooze length) are changed in the app's settings. `GET /api/health` lists configuration problems.
 
 ## Development
@@ -75,6 +77,8 @@ bun run dev            # http://localhost:8787 (local D1; passkeys work on local
 bun run test           # vitest in the Workers runtime — never `bun test`
 bun run test:bun       # the same suite against the self-hosted platform (SQLite on Bun)
 bun run lint && bun run typecheck && bun run i18n:check && bun run build
+bun run e2e            # Playwright against the self-hosted server, with a virtual passkey
+                       # (CHROMIUM_PATH=/usr/bin/chromium to use an installed Chromium)
 ```
 
 ## Licence

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 /** In-app notices (§2.1): list and dismiss. */
 import { createRoute, z } from '@hono/zod-openapi';
+import { notFound } from '../../core/errors';
 import { iso } from '../../core/ports';
 import { sessionOf } from '../auth/middleware';
 import { json } from '../http';
@@ -48,12 +49,13 @@ function routes(app: Router) {
       responses: { 200: json(z.object({ ok: z.literal(true) })) },
     }),
     async (c) => {
-      await c.env.ctx.db.run(
+      const r = await c.env.ctx.db.run(
         'UPDATE notices SET dismissed_at = ? WHERE id = ? AND user_id = ?',
         iso(c.env.ctx.clock.now()),
         c.req.valid('param').id,
         sessionOf(c).userId,
       );
+      if (r.changes === 0) throw notFound();
       return c.json({ ok: true as const }, 200);
     },
   );
