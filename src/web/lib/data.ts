@@ -182,6 +182,21 @@ async function save(c: Changes, replaceAll = false) {
 
 const myId = () => auth.value?.user?.id ?? '';
 
+/**
+ * The shape of the local mirror. Bump it when `Item` (or a list or log
+ * entry) gains fields: a mirror written by an older version lacks them, and
+ * a pull only returns what changed, so the next sync is then a full one.
+ */
+const DATA_VERSION = 2;
+
+/** Fields added after DATA_VERSION 1, so an older mirror still renders until it is refreshed. */
+const ITEM_DEFAULTS = {
+  position: null,
+  hidden_at: null,
+  hearted_by: [],
+  hearted_by_me: false,
+} satisfies Partial<Item>;
+
 function emptyItem(id: string, now: string): Item {
   return {
     id,
@@ -434,7 +449,11 @@ async function pullChanges(forceFull = false): Promise<boolean> {
     }
     await save(r, r.full);
     cursor = r.cursor;
-    await tx(['meta'], (t) => t.objectStore('meta').put(cursor, 'cursor'));
+    const full = r.full;
+    await tx(['meta'], (t) => {
+      t.objectStore('meta').put(cursor, 'cursor');
+      if (full) t.objectStore('meta').put(DATA_VERSION, 'version');
+    });
     if (!r.more) break;
   }
   // Ops queued meanwhile are not on the server yet: re-apply them on top.
@@ -498,13 +517,14 @@ export async function startData(userId: string): Promise<void> {
     ]);
     batch(() => {
       lists.value = l.sort((a, b) => a.created_at.localeCompare(b.created_at));
-      items.value = new Map(i.map((x) => [x.id, x]));
+      items.value = new Map(i.map((x) => [x.id, { ...ITEM_DEFAULTS, ...x }]));
       logs.value = g;
     });
     await refreshQueueState();
   }
   if (lists.value.length) ready.value = true;
-  await sync();
+  // A mirror from an older version: replace it with a full snapshot.
+  await sync({ full: (await meta<number>('version')) !== DATA_VERSION });
   ready.value = true;
   if (started) return;
   started = true;

@@ -208,6 +208,37 @@ try {
     if ((await titles())[0] !== last) throw new Error('order was not kept');
   });
 
+  await step('still shows lists after an update, from an older local copy', async () => {
+    // What a device that last synced before 0.4.0 has: items without the
+    // newer fields, and no data version.
+    await page.evaluate(async () => {
+      const dbs = await indexedDB.databases();
+      const name = dbs.find((d) => d.name?.startsWith('someday-'))!.name!;
+      const db = await new Promise<IDBDatabase>((ok, no) => {
+        const r = indexedDB.open(name);
+        r.onsuccess = () => ok(r.result);
+        r.onerror = () => no(r.error);
+      });
+      const t = db.transaction(['items', 'meta'], 'readwrite');
+      const store = t.objectStore('items');
+      const all = await new Promise<Record<string, unknown>[]>((ok) => {
+        const r = store.getAll();
+        r.onsuccess = () => ok(r.result);
+      });
+      for (const it of all) {
+        for (const k of ['position', 'hidden_at', 'hearted_by', 'hearted_by_me']) delete it[k];
+        store.put(it);
+      }
+      t.objectStore('meta').delete('version');
+      await new Promise((ok) => (t.oncomplete = ok));
+      db.close();
+    });
+    await page.reload();
+    await page.getByText('Idea from Bob').waitFor();
+    // The full sync brought the fields back.
+    await page.getByText('1 heart', { exact: true }).waitFor();
+  });
+
   await step('downloads the data export', async () => {
     await page.getByRole('link', { name: 'Settings' }).first().click();
     const [download] = await Promise.all([
