@@ -14,6 +14,7 @@ import { navigate, onLinkClick, route } from './lib/router';
 import { auth, loadAuth, loadNotices, loadSettings, online, settings } from './lib/store';
 import { AdminScreen } from './screens/Admin';
 import { Login, MustRegister, NewDevice, Signup } from './screens/Auth';
+import { ConsentScreen } from './screens/Consent';
 import { HomeScreen } from './screens/Home';
 import { JoinScreen } from './screens/Join';
 import { ItemScreen, NewItemScreen } from './screens/Item';
@@ -67,6 +68,7 @@ function Header() {
 
 function Routes() {
   const path = route.value;
+  if (path === '/oauth/authorize') return <ConsentScreen />;
   if (path.startsWith('/settings')) return <SettingsScreen />;
   if (/^\/lists\/[^/]+\/settings$/.test(path)) return <ListSettingsScreen />;
   if (path.startsWith('/lists/')) return <ListScreen />;

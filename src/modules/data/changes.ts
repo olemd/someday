@@ -10,8 +10,11 @@ import type { Ctx } from '../types';
 export type Entity = 'list' | 'item' | 'log' | 'member';
 
 export interface Actor {
+  /** User ID, or the OAuth client ID for MCP writes (§8.2). */
   id: string;
   kind: 'user' | 'oauth';
+  /** For OAuth actors: the user the client acts for. */
+  userId?: string;
 }
 
 export function changeStmt(
@@ -29,8 +32,8 @@ export function changeStmt(
   gate?: { sql: string; params: (string | number | null)[] },
 ): Stmt {
   return {
-    sql: `INSERT INTO changes (entity, entity_id, list_id, op, at, actor, actor_kind, visible_to)
-          SELECT ?, ?, ?, ?, ?, ?, ?, ? ${gate ? `WHERE ${gate.sql}` : ''}`,
+    sql: `INSERT INTO changes (entity, entity_id, list_id, op, at, actor, actor_kind, visible_to, actor_user)
+          SELECT ?, ?, ?, ?, ?, ?, ?, ?, ? ${gate ? `WHERE ${gate.sql}` : ''}`,
     params: [
       c.entity,
       c.entityId,
@@ -40,6 +43,7 @@ export function changeStmt(
       c.actor?.id ?? null,
       c.actor?.kind ?? 'user',
       c.visibleTo ?? null,
+      c.actor ? (c.actor.kind === 'user' ? c.actor.id : (c.actor.userId ?? null)) : null,
       ...(gate?.params ?? []),
     ],
   };

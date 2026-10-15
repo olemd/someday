@@ -28,6 +28,8 @@ const server = Bun.spawn(['bun', 'src/platform/bun/server.ts'], {
     PUBLIC_ORIGIN: ORIGIN,
     TOKEN_PEPPER: 'e2e-pepper-e2e-pepper-e2e-pepper-0123',
     BOOTSTRAP_ADMIN_TOKEN: TOKEN,
+    // The e2e MCP client registers dynamically (no hosted metadata document).
+    MCP_ALLOW_DCR: 'true',
   },
   stdout: 'ignore',
   stderr: 'inherit',
@@ -86,6 +88,7 @@ try {
   shotPage = page;
   page.on('pageerror', (e) => errors.push(String(e)));
   page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
+  page.on('response', (r) => r.status() >= 400 && errors.push(`${r.status()} ${r.url()}`));
 
   // A virtual platform authenticator with user verification: real passkeys.
   const cdp = await context.newCDPSession(page);
@@ -211,6 +214,89 @@ try {
     }
     const bytes = await Bun.file((await download.path())!).bytes();
     if (bytes[0] !== 0x50 || bytes[1] !== 0x4b) throw new Error('not a zip');
+  });
+
+  await step('connects an MCP client through OAuth consent and calls a tool', async () => {
+    const callback = 'http://127.0.0.1:47123/callback';
+    const reg = (await (
+      await fetch(`${ORIGIN}/oauth/register`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ client_name: 'E2E Assistant', redirect_uris: [callback] }),
+      })
+    ).json()) as { client_id: string };
+    const verifier = 'v'.repeat(64);
+    const challenge = Buffer.from(
+      new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier))),
+    ).toString('base64url');
+    const authUrl = `${ORIGIN}/oauth/authorize?${new URLSearchParams({
+      response_type: 'code',
+      client_id: reg.client_id,
+      redirect_uri: callback,
+      code_challenge: challenge,
+      code_challenge_method: 'S256',
+      scope: 'someday:read someday:write',
+      state: 's1',
+      resource: `${ORIGIN}/mcp`,
+    })}`;
+    let redirected = '';
+    await page.route('http://127.0.0.1:47123/**', (route) => {
+      redirected = route.request().url();
+      return route.fulfill({ status: 200, body: 'ok' });
+    });
+    await page.goto(authUrl);
+    await page.getByRole('heading', { name: 'Let E2E Assistant use Someday?' }).waitFor();
+    await page.getByRole('button', { name: 'Allow' }).click();
+    await page.waitForURL(/127\.0\.0\.1:47123/);
+    const code = new URL(redirected).searchParams.get('code')!;
+    const tok = (await (
+      await fetch(`${ORIGIN}/oauth/token`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          grant_type: 'authorization_code',
+          code,
+          redirect_uri: callback,
+          client_id: reg.client_id,
+          code_verifier: verifier,
+          resource: `${ORIGIN}/mcp`,
+        }),
+      })
+    ).json()) as { access_token: string };
+    const res = await fetch(`${ORIGIN}/mcp`, {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${tok.access_token}`,
+        'content-type': 'application/json',
+        accept: 'application/json, text/event-stream',
+        'mcp-protocol-version': '2026-07-28',
+        'mcp-method': 'tools/call',
+        'mcp-name': 'create_item',
+      },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'tools/call',
+        params: {
+          name: 'create_item',
+          arguments: { title: 'Added by the assistant' },
+          _meta: {
+            'io.modelcontextprotocol/protocolVersion': '2026-07-28',
+            'io.modelcontextprotocol/clientCapabilities': {},
+          },
+        },
+      }),
+    });
+    const rpc = (await res.json()) as { result?: { isError?: boolean } };
+    if (rpc.result?.isError || !rpc.result)
+      throw new Error(`tool call failed: ${JSON.stringify(rpc)}`);
+    await page.goto(`${ORIGIN}/settings`);
+    await page.getByText('E2E Assistant').waitFor();
+    await page.goto(`${ORIGIN}/lists`);
+    await page.locator('.list-card', { hasText: 'Someday' }).click();
+    await page.getByText('Added by the assistant').click();
+    await page.getByText('History').click();
+    await page.getByText('via E2E Assistant').waitFor();
   });
 
   await step('logs in again with the passkey', async () => {

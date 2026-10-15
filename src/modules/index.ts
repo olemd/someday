@@ -8,7 +8,9 @@ import { itemsModule, logModule, tagsModule } from './items';
 import { linksModule } from './links';
 import { joinModule, listsModule } from './lists';
 import { noticesModule } from './notices';
+import { mcpModule } from './mcp';
 import { notifyModule } from './notify';
+import { oauthApiModule, oauthModule, wellKnownModule } from './oauth';
 import { pushModule } from './push';
 import { settingsModule } from './settings';
 import { snoozeModule, suggestModule } from './suggest';
@@ -38,4 +40,8 @@ export const modules: Module[] = [
   exportModule,
   importModule,
   accountModule,
+  wellKnownModule,
+  oauthModule,
+  oauthApiModule,
+  mcpModule,
 ];

@@ -118,6 +118,47 @@ function itemRoutes(app: Router) {
     },
   );
 
+  // History (§8.2): who changed the idea, and "via <client>" for MCP writes.
+  app.openapi(
+    createRoute({
+      method: 'get',
+      path: '/{id}/history',
+      tags: ['items'],
+      request: { params: Id },
+      responses: { 200: json(z.array(Any)) },
+    }),
+    async (c) => {
+      const { access } = sessionAccess(c);
+      const { id } = c.req.valid('param');
+      await getItem(c.env.ctx, access, id);
+      const rows = await c.env.ctx.db.all<{
+        at: string;
+        op: string;
+        actor_kind: string;
+        user_name: string | null;
+        client_name: string | null;
+      }>(
+        `SELECT ch.at, ch.op, ch.actor_kind, u.display_name AS user_name, oc.client_name
+           FROM changes ch
+           LEFT JOIN users u ON u.id = ch.actor_user
+           LEFT JOIN oauth_clients oc ON ch.actor_kind = 'oauth' AND oc.client_id = ch.actor
+          WHERE ch.entity = 'item' AND ch.entity_id = ? AND (ch.visible_to IS NULL OR ch.visible_to = ?)
+          ORDER BY ch.seq DESC LIMIT 50`,
+        id,
+        access.userId,
+      );
+      return c.json(
+        rows.map((r) => ({
+          at: r.at,
+          op: r.op,
+          by: r.user_name,
+          via: r.actor_kind === 'oauth' ? (r.client_name ?? 'an app') : null,
+        })),
+        200,
+      );
+    },
+  );
+
   app.openapi(
     createRoute({
       method: 'post',

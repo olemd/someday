@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 /** One idea: details, edit, status, "done" log with undo (§3.2, §3.3). */
-import { useState } from 'preact/hooks';
+import { useEffect, useState } from 'preact/hooks';
+import { get } from '../lib/api';
 import type { LogEntry } from '../../shared/schemas/items';
 import { confirmAction } from '../components/Dialog';
 import { openDoneDialog } from '../components/DoneDialog';
@@ -116,6 +117,41 @@ function LogList({ entries, canLog }: { entries: LogEntry[]; canLog: boolean }) 
         </li>
       ))}
     </ul>
+  );
+}
+
+interface HistoryRow {
+  at: string;
+  op: string;
+  by: string | null;
+  via: string | null;
+}
+
+/** Who changed this idea (and "via <app>" for changes made through MCP, §8.2). Online only. */
+function History({ id }: { id: string }) {
+  const [rows, setRows] = useState<HistoryRow[] | null>(null);
+  const [error, setError] = useState(false);
+  // Fetched when opened: a just-created idea may still be waiting in the outbox.
+  const load = () => get<HistoryRow[]>(`/items/${id}/history`).then(setRows, () => setError(true));
+  useEffect(() => {
+    setRows(null);
+    setError(false);
+  }, [id]);
+  return (
+    <details onToggle={(e) => e.currentTarget.open && rows === null && void load()}>
+      <summary>{t('item.history')}</summary>
+      {error && <p class="muted small">{t('item.historyUnavailable')}</p>}
+      {rows && (
+        <ul class="plain stack tight small">
+          {rows.map((r, i) => (
+            <li key={i}>
+              {dateTime(r.at)} · {r.by ?? t('item.someone')}
+              {r.via && ` ${t('item.via', { app: r.via })}`}
+            </li>
+          ))}
+        </ul>
+      )}
+    </details>
   );
 }
 
@@ -325,6 +361,7 @@ export function ItemScreen() {
         <h2 id="log-title">{t('item.log')}</h2>
         <LogList entries={entries} canLog />
       </section>
+      <History id={id} />
     </div>
   );
 }

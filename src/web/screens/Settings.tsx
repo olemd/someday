@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 /** Settings: profile, language and time zone, notifications, security, invites. */
 import { useEffect, useState } from 'preact/hooks';
+import { ConnectedApps } from '../components/ConnectedApps';
 import { Invites } from '../components/Invites';
 import { YourData } from '../components/YourData';
 import { PushSettings } from '../components/PushSettings';
@@ -339,6 +340,7 @@ export function SettingsScreen() {
       <Nudges />
       <Suggestions />
       <SecuritySettings />
+      <ConnectedApps />
       <Invites />
       <YourData />
       <div class="actions">

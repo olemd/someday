@@ -383,7 +383,11 @@
     "noLog": "Ikke gjort ennå.",
     "undo": "Angre",
     "undoConfirm": "Fjerne denne loggføringen?",
-    "undone": "Loggføringen er fjernet"
+    "undone": "Loggføringen er fjernet",
+    "history": "Historikk",
+    "someone": "Noen",
+    "via": "via {app}",
+    "historyUnavailable": "Historikken vises når du er på nett og ideen er lagret."
   },
   "lists": {
     "title": "Lister",
@@ -539,5 +543,32 @@
     "deleteForEveryone": "Slett den for alle",
     "giveTo": "Gi den til {name}",
     "deleteConfirm": "Slette kontoen? Dette kan ikke angres etter karenstiden."
+  },
+  "consent": {
+    "title": "Gi {name} tilgang til Someday?",
+    "intro": "En app (for eksempel en KI-assistent) ber om tilgang til Someday-en din via MCP. Gi bare tilgang til apper du stoler på.",
+    "clientId": "Appens identitet",
+    "redirect": "Du sendes tilbake til",
+    "localhostWarning": "Denne appen returnerer til en adresse på din egen datamaskin (localhost). Ethvert program på maskinen kan utgi seg for å være den: fortsett bare hvis du selv startet dette.",
+    "scopes": "Den kan",
+    "scope_read": "Lese listene og ideene dine",
+    "scope_readHint": "Søke, vise og gi forslag.",
+    "scope_write": "Legge til og endre ideer",
+    "scope_writeHint": "Opprette og redigere ideer, sette status og loggføre det du har gjort (privat som standard).",
+    "scope_notify": "Sende deg varsler",
+    "scope_notifyHint": "Med respekt for stille timer og en daglig grense.",
+    "lists": "Hvilke lister",
+    "allLists": "Alle listene mine",
+    "someLists": "Bare disse listene:",
+    "allow": "Tillat",
+    "deny": "Avslå",
+    "errorTitle": "Denne appen kan ikke kobles til"
+  },
+  "apps": {
+    "title": "Tilkoblede apper",
+    "intro": "Assistenter og andre apper kan bruke Someday via MCP på {url}. De ber om tillatelse her først.",
+    "none": "Ingen apper er koblet til.",
+    "revoke": "Koble fra",
+    "revokeConfirm": "Koble fra {name}? Appen mister tilgangen med en gang."
   }
 }

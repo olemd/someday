@@ -383,7 +383,11 @@
     "noLog": "Not done yet.",
     "undo": "Undo",
     "undoConfirm": "Remove this log entry?",
-    "undone": "Log entry removed"
+    "undone": "Log entry removed",
+    "history": "History",
+    "someone": "Someone",
+    "via": "via {app}",
+    "historyUnavailable": "History is shown when you are online and the idea has been saved."
   },
   "lists": {
     "title": "Lists",
@@ -539,5 +543,32 @@
     "deleteForEveryone": "Delete it for everyone",
     "giveTo": "Give it to {name}",
     "deleteConfirm": "Delete your account? This cannot be undone after the grace period."
+  },
+  "consent": {
+    "title": "Let {name} use Someday?",
+    "intro": "An app (for example an AI assistant) asks for access to your Someday through MCP. Only allow apps you trust.",
+    "clientId": "App identity",
+    "redirect": "You will be sent back to",
+    "localhostWarning": "This app returns to an address on your own computer (localhost). Any program on this computer could claim to be it: only continue if you started this yourself.",
+    "scopes": "It may",
+    "scope_read": "Read your lists and ideas",
+    "scope_readHint": "Search, view and get suggestions.",
+    "scope_write": "Add and change ideas",
+    "scope_writeHint": "Create and edit ideas, set status and log what you did (private by default).",
+    "scope_notify": "Send you notifications",
+    "scope_notifyHint": "Respecting your quiet hours and a daily limit.",
+    "lists": "Which lists",
+    "allLists": "All my lists",
+    "someLists": "Only these lists:",
+    "allow": "Allow",
+    "deny": "Deny",
+    "errorTitle": "This app cannot connect"
+  },
+  "apps": {
+    "title": "Connected apps",
+    "intro": "Assistants and other apps can use Someday through MCP at {url}. They ask for permission here first.",
+    "none": "No apps are connected.",
+    "revoke": "Disconnect",
+    "revokeConfirm": "Disconnect {name}? It loses access at once."
   }
 }
