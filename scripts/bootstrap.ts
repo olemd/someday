@@ -70,16 +70,25 @@ async function findOrCreateD1(name: string): Promise<string> {
 }
 
 async function existingSecrets(env?: string): Promise<Set<string>> {
+  // Runs after the deploy, so the Worker exists and listing must work. If it
+  // does not, stop: guessing "no secrets yet" would generate a new
+  // TOKEN_PEPPER (logging everyone out) and new VAPID keys (breaking push).
   const r = await exec(
     ['bunx', 'wrangler', 'secret', 'list', '--format', 'json', ...(env ? ['--env', env] : [])],
     { allowFail: true },
   );
-  if (!r.ok) return new Set();
+  let names: { name: string }[] | null = null;
   try {
-    return new Set((JSON.parse(r.out) as { name: string }[]).map((s) => s.name));
+    names = r.ok ? (JSON.parse(r.out) as { name: string }[]) : null;
   } catch {
-    return new Set();
+    names = null;
   }
+  if (!Array.isArray(names)) {
+    throw new Error(
+      'Could not list the existing Worker secrets, so none were changed. Fix the problem above and run bootstrap again.',
+    );
+  }
+  return new Set(names.map((s) => s.name));
 }
 
 /**
